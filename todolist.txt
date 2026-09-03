@@ -1,0 +1,17 @@
+ottimizzo try_move()
+sistemo sensibilità evalbar
+sistemo problema con undo_move
+
+suoni
+interfaccia di lobby:
+conclusione partita
+
+
+evaluation bar (grafica)
+bot :
+apertura:
+rendere leggibile la mia posizione e controllare tra alcune di GM
+matti: verso endgame favorisco portare il re e altri pezzi verso il re nemico (nei limiti)
+
+
+
