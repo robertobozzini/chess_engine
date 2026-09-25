@@ -13,7 +13,9 @@ extern int ScreenWidth;
 extern int ScreenHeight;
 
 extern bool (*event_handler)(void);//coso figo
+//bool in modo che mi restituisca true se devo cambiare sezione, false altrimenti
 extern void (*screen_drawer)(void);
 
 extern Vector2 mouse_position;
+
 #endif

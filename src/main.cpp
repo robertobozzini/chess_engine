@@ -72,6 +72,7 @@ void generic_event_handler(void){
 
 
 void generic_draw(void){
+
     if (screen_drawer != nullptr)
         screen_drawer();
 
