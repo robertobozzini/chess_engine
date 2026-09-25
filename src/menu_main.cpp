@@ -1,6 +1,7 @@
 #include "menu_main.h"
-
+#include "buttons.h"
 using namespace std;
+
 
 Texture2D background;
 float scaleX, scaleY, maxscale;
@@ -9,7 +10,8 @@ Texture2D logo;
 float logoscale = 0.5f;
 Vector2 logo_position;
 
-int fontsize = 32;
+// int fontsize = 32;
+// Font uiFont;
 void menu_init(void){
     //carica le texture, font, ecc della sezione menu
     //inizializza la sezione menu
@@ -19,14 +21,17 @@ void menu_init(void){
 	
 	scaleX = (float)GetScreenWidth() / background.width;
 	scaleY = (float)GetScreenHeight() / background.height;
-	maxscale=fmaxf(scaleX,scaleY);
+	maxscale = fmaxf(scaleX,scaleY);
 	
 	
 	logo_position.x=GetScreenWidth()/2 - logo.width*logoscale/2;
 	logo_position.y=0;
 	
 	
-	uiFont = LoadFontEx("../Fonts/Inter/static/Inter_28pt-SemiBold.ttf", fontsize, NULL, 0);
+	//uiFont = LoadFontEx("../Fonts/Inter/static/Inter_28pt-SemiBold.ttf", fontsize, NULL, 0);
+
+    buttons_init();
+
 }
 
 bool menu_event_handler(void){

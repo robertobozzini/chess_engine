@@ -2,7 +2,7 @@
 #define MENU_MAIN_H
 
 #include "main.h"
-
+#include "buttons.h"
 
 void menu_init(void);
 
