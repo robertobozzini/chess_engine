@@ -66,3 +66,11 @@ void buttons_init(void){
     textcolor = DARKBROWN;
     hover_textcolor = ColorBrightness(textcolor, brightness_factor);
 }
+
+void buttons_event_handler(void){
+    //gestisce gli eventi dei bottoni
+    if(menu_section == 1)
+        for (Button& button : menu_buttons){
+            button.button_event_handler();
+        }
+}

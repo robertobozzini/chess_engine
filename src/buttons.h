@@ -2,6 +2,8 @@
 #define BUTTONS_H
 
 #include "main.h"
+#include "menu_main.h"
+#include "buttons_specifics.h"
 
 extern int fontsize;
 extern Font uiFont;
@@ -24,4 +26,5 @@ struct Button {
 
 void buttons_init(void);
 
+void buttons_event_handler(void);
 #endif
