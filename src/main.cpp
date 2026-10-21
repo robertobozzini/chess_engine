@@ -1,121 +1,97 @@
+
+//import particolari:
 #include "main.h"
-#include "menu_main.h"
-#include "game_main.h"
+#include "lobby.h"
+#include "chessboard.h"
 
 using namespace std;
 
-//dimensioni schermo di base
 int ScreenWidth = 1200;
 int ScreenHeight = 800;
 
-bool (*event_handler)(void);//coso figo
-void (*screen_drawer)(void);
+/*
+cambioprogramma: rettangolo
+*/
+
+void (*event_handler)(Status *status);//coso figo
+void (*screen_drawer)(Status *status);
 
 //cosi posso chiamare sempre la stessa funzione (che è un pointer--
 //alla funzione che voglio usare in quel momento
 
-bool in_game = false;//false = menu, true = game
 
 
-Vector2 mouse_position;
+Texture2D cursorb;
+Texture2D cursorh;
 
-Texture2D cursor_base;
-Texture2D cursor_hold;
+float cursorscaleb = 0.09f;
+float cursorscaleh = 0.07f;
+float cursorscale;
 
-bool holding_cursor = false;
+int main(void){
+	
+	Status status;
 
-float scale_cursor_base = 0.09f;
-float scale_cursor_hold = 0.07f;
-
-void init(void){
-    //chiama i loader vari delle sezioni (texture, font, ecc)
-    // chiama gli init delle sezioni
-    event_handler = menu_event_handler;
-    screen_drawer = menu_drawer;
-
-    cursor_base = LoadTexture("../images/CursorBase.png");
-	cursor_hold = LoadTexture("../images/CursorHolding.png");
-
-    menu_init();
-    game_init();
-}
-
-void generic_event_handler(void){
-    //gestisce gli eventi per sezioni
-    //+ eventi globali (tipo mouse position)
-    
-
-    mouse_position = GetMousePosition();
-    holding_cursor = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
-
-    if (event_handler == nullptr)
-        return;
-    
-    bool change_section = event_handler();
-
-    if (change_section == true){
-        in_game = !in_game;
-
-        if(in_game == true){
-
-            event_handler = game_event_handler;
-            screen_drawer = game_drawer;
-        }
-        else {
-
-            event_handler = menu_event_handler;
-            screen_drawer = menu_drawer;
-        }
-    }
-    
-}
-
-
-void generic_draw(void){
-
-    if (screen_drawer != nullptr)
-        screen_drawer();
-
-    float scale_cursor = holding_cursor ? scale_cursor_hold : scale_cursor_base;
-    mouse_position.x -= cursor_base.width * scale_cursor/2;
-    mouse_position.y -= cursor_base.height * scale_cursor/2;
-
-    DrawTextureEx(
-        holding_cursor ? cursor_hold : cursor_base, 
-        mouse_position, 
-        0.0f, 
-        scale_cursor, 
-        WHITE
-    );
-}
-
-int main(void)
-{
-    //inizializzo la finestra
-    InitWindow(ScreenWidth, ScreenHeight, "Chess Engine");
-    SetTargetFPS(60);
-    SetExitKey(KEY_NULL);
-
-    //inizializzo il pointer alla funzione di disegno
-    screen_drawer = nullptr;
-    event_handler = nullptr;
-
-    init();
-
-    while (!WindowShouldClose())
-    {
-        //gestione eventi
-        generic_event_handler();
-
-
-        //disegno
-        BeginDrawing();
-
-            generic_draw();
-
-        EndDrawing();
-    }
-
-    CloseWindow();
-    return 0;
+//	status.width = ScreenWidth;
+//	status.height = ScreenHeight;
+	
+	InitWindow(ScreenWidth, ScreenHeight, "chess");
+	//la scacchiera è quadrata
+	
+	SetExitKey(KEY_NULL);
+	
+	SetTargetFPS(60);
+	
+	event_handler=lobby_handler;
+	screen_drawer=lobby_drawer;
+	
+	//main init:
+	cursorb = LoadTexture("../images/CursorBase.png");
+	cursorh = LoadTexture("../images/CursorHolding.png");
+	lobby_init(&status);
+	chessboard_init(&status);
+	
+	HideCursor();
+	
+	while(!WindowShouldClose()){
+		
+		event_handler(&status);
+		
+//		if(status.ingame){//entri in partita
+//			//chessboard_init(&status);
+//			event_handler=chessboard_handler;
+//			screen_drawer=chessboard_drawer;
+//		}
+//		else {
+//			//lobby_init(&status);
+//			event_handler=lobby_handler;
+//			screen_drawer=lobby_drawer;
+//		}
+			
+		//status.isholding = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+		
+		BeginDrawing();
+			
+			screen_drawer(&status);
+		
+			Vector2 mousepos = GetMousePosition();
+		
+			cursorscale =(status.isholding)?cursorscaleh : cursorscaleb;
+		
+			mousepos.x -= cursorb.width*cursorscale/2;
+			mousepos.y -= cursorb.height*cursorscale/2;
+		
+			DrawTextureEx(
+				(status.isholding)? cursorh : cursorb,
+				mousepos,
+				0,
+				cursorscale,
+				WHITE
+			);
+		
+		EndDrawing();
+		
+	}
+	
+	CloseWindow();
 }

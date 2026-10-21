@@ -1,3 +1,4 @@
+
 #ifndef MAIN_H
 
 #define MAIN_H//per evitare recursion
@@ -8,14 +9,27 @@
 #include<iostream>
 #include <algorithm>
 
+extern Texture2D cursorb;
+extern Texture2D cursorh;
 
 extern int ScreenWidth;
 extern int ScreenHeight;
+struct Status{
+	bool turn = 1;//1=bianco
+	bool ingame = 0;
+	bool isholding = 0;
+	bool inverted = 0;
+	
+	bool bot = 1;
+	
+	bool audio = 1;
+	
+};
 
-extern bool (*event_handler)(void);//coso figo
-//bool in modo che mi restituisca true se devo cambiare sezione, false altrimenti
-extern void (*screen_drawer)(void);
+extern void (*event_handler)(Status *status);//coso figo
+extern void (*screen_drawer)(Status *status);
 
-extern Vector2 mouse_position;
+
 
 #endif
+
