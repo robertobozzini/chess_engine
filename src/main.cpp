@@ -92,7 +92,7 @@ void generic_draw(void){
 int main(void)
 {
     //inizializzo la finestra
-    InitWindow(ScreenWidth, ScreenHeight, "Chess Engine");
+    InitWindow(ScreenWidth, ScreenHeight, "Chess Engine - Bozzini Roberto");
     SetTargetFPS(60);
     SetExitKey(KEY_NULL);
 

@@ -16,17 +16,20 @@ struct Button {
     Vector2 position;
     Vector2 size;
     std::string text;
+    int fontsize;
+    Font uiFont;
     bool hovered = false;
     bool state = 0;
     void (*on_click)(void);
 
     void button_event_handler(void);
     void button_drawer(void);
-    void init(Vector2 pos, Vector2 sz, std::string txt, void (*click_handler)(void) = nullptr);
+    void init(Vector2 pos, Vector2 sz, std::string txt, int fontsize, Font uiFont, void (*click_handler)(void) = nullptr);
 };
 
 
 void buttons_init(void);
-
 void buttons_event_handler(void);
+void buttons_draw(void);
+
 #endif

@@ -38,9 +38,12 @@ void menu_init(void){
 	//uiFont = LoadFontEx("../Fonts/Inter/static/Inter_28pt-SemiBold.ttf", fontsize, NULL, 0);
 
     buttons_init();
+    //start button -> schermata con impostazioni e altro
+    //0 = play, 1 = turn, 2 = bot, 3 = evalbar, 4 = audio
     settings.assign(menu_buttons.size(), false);
     //Settings 0 non serve, 1 = turn, 2 = bot, 3 = eval, 4 = audio
     settings[1] = true; //by default you are playing as white
+    settings[2] = false;//by default you are playing alone
     settings[3] = true; //evaluation is on by default
     settings[4] = true; //audio is on by default
     
@@ -54,8 +57,11 @@ bool menu_event_handler(void){
     change_section = false;
 
     buttons_event_handler();
-
-
+    if(IsKeyPressed(KEY_ESCAPE)){
+        if(menu_section == 1)
+            menu_section = 0;
+        else CloseWindow();
+    }
     return change_section;
 }
 
@@ -78,13 +84,6 @@ void menu_drawer(void){
 		WHITE
 	);
 
-    //disegna la sezione
-    if(menu_section == 0){
-        return;
-    }
-    else{
-        for (auto &button : menu_buttons){
-            button.button_drawer();
-        }
-    }
+    buttons_draw();
+
 }
