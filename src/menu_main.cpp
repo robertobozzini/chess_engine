@@ -63,7 +63,7 @@ bool menu_event_handler(void){
 void menu_drawer(void){
     //disegna la sezione menu
     if(menu_section == 0){
-
+        return;
     }
     else{
         for (auto &button : menu_buttons){

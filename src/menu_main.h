@@ -4,8 +4,9 @@
 #include "main.h"
 #include "buttons.h"
 
+using namespace std;
 //extern bool change_section;
-extern vector<Button> menu_buttons;
+extern vector<Button>menu_buttons;
 extern Button start_button_obj;
 
 extern bool menu_section; //0 = start 1 = settings

@@ -6,7 +6,7 @@
 #include<vector>
 #include<raymath.h>
 #include<iostream>
-#include <algorithm>
+#include<algorithm>
 
 
 extern int ScreenWidth;
