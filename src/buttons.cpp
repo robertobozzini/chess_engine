@@ -1,5 +1,5 @@
 #include "buttons.h"
-
+#include "menu_main.h" 
 using namespace std;
 
 int fontsize = 32;

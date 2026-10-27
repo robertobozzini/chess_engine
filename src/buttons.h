@@ -2,8 +2,10 @@
 #define BUTTONS_H
 
 #include "main.h"
-#include "menu_main.h"
-#include "buttons_specifics.h"
+#include <string>
+#include <functional>   // serve al punto 2
+// #include "menu_main.h"
+// #include "buttons_specifics.h"
 
 extern int fontsize;
 extern Font uiFont;

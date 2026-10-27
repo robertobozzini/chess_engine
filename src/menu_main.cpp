@@ -41,8 +41,8 @@ void menu_init(void){
     settings.assign(menu_buttons.size(), false);
     //Settings 0 non serve, 1 = turn, 2 = bot, 3 = eval, 4 = audio
     settings[1] = true; //by default you are playing as white
-    settings[3] = true; //eval button is on by default
-    settings[4] = true; //audio button is on by default
+    settings[3] = true; //evaluation is on by default
+    settings[4] = true; //audio is on by default
     
     
 
@@ -61,7 +61,24 @@ bool menu_event_handler(void){
 
 
 void menu_drawer(void){
-    //disegna la sezione menu
+    ClearBackground(BLACK);
+	
+	DrawTextureEx(
+		background,
+		(Vector2){0, 0},
+		0,
+		maxscale,
+		LIGHTGRAY
+	);
+	DrawTextureEx(
+		logo,
+		logo_position,
+		0,
+		logoscale,
+		WHITE
+	);
+
+    //disegna la sezione
     if(menu_section == 0){
         return;
     }
