@@ -1,4 +1,9 @@
-sistemo posizione e dimensione bottoni vari
+menu:
+    sistemo posizione e dimensione bottoni vari
 
+game:
+    debug come mai non mi inverte scacchiera
+    modello di posizione
+    come trattare le variee mosse ecc
 
 

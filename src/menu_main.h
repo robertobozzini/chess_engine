@@ -5,7 +5,9 @@
 #include "buttons.h"
 
 using namespace std;
-//extern bool change_section;
+
+extern Texture2D logo;
+
 extern vector<Button>menu_buttons;
 extern Button start_button_obj;
 

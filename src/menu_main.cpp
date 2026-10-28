@@ -17,7 +17,7 @@ bool change_section = false;
 vector<Button> menu_buttons;
 Button start_button_obj;
 
-vector<bool> settings;
+vector<bool>settings;
 
 void menu_init(void){
     //carica le texture, font, ecc della sezione menu
