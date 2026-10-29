@@ -6,6 +6,8 @@
 
 using namespace std;
 
+enum Setting { PLAY, TURN, BOT, EVAL, AUDIO };
+
 extern Texture2D logo;
 
 extern vector<Button>menu_buttons;
@@ -14,7 +16,7 @@ extern Button start_button_obj;
 extern bool menu_section; //0 = start 1 = settings
 extern bool change_section;
 
-extern vector<bool> settings;
+extern bool settings[5];
 
 void menu_init(void);
 

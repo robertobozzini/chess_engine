@@ -2,8 +2,7 @@ menu:
     sistemo posizione e dimensione bottoni vari
 
 game:
-    debug come mai non mi inverte scacchiera
-    modello di posizione
-    come trattare le variee mosse ecc
+    sistemo bug di "vector does not name a type" ??
+    sistemo metodo per invertire
 
 

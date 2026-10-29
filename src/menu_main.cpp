@@ -17,7 +17,7 @@ bool change_section = false;
 vector<Button> menu_buttons;
 Button start_button_obj;
 
-vector<bool>settings;
+bool settings[5];
 
 void menu_init(void){
     //carica le texture, font, ecc della sezione menu
@@ -40,12 +40,10 @@ void menu_init(void){
     buttons_init();
     //start button -> schermata con impostazioni e altro
     //0 = play, 1 = turn, 2 = bot, 3 = evalbar, 4 = audio
-    settings.assign(menu_buttons.size(), false);
-    //Settings 0 non serve, 1 = turn, 2 = bot, 3 = eval, 4 = audio
-    settings[1] = true; //by default you are playing as white
-    settings[2] = false;//by default you are playing alone
-    settings[3] = true; //evaluation is on by default
-    settings[4] = true; //audio is on by default
+    settings[TURN] = true; //by default you are playing as white
+    settings[BOT] = false;//by default you are playing alone
+    settings[EVAL] = true; //evaluation is on by default
+    settings[AUDIO] = true; //audio is on by default
     
     
 
