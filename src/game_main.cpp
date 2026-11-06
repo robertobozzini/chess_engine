@@ -1,6 +1,7 @@
 #include "game_main.h"
 #include "board.h"
 #include "menu_main.h"
+#include "board_features.h"
 using namespace std;
 
 
@@ -16,6 +17,7 @@ bool game_event_handler(){
         menu_section = 0;
         return true;
     }
+    handle_mouse();
     return false;
 }
 

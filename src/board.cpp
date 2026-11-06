@@ -1,24 +1,15 @@
 #include "board.h"
 #include "game_main.h"
 #include "menu_main.h"
-#include <bit>
-#include <vector>
+#include "board_features.h"
+#include "pieces.h"
 
 using namespace std;
-
-
 
 Vector2 corner;
 int squaresize, chessboardsize;
 
-Texture2D texall[2][6];
-
-vector<Position>record;
-
-Position startingp;
-Position currentp;
-Position emptyp;
-
+//BIT OPERATIONS ON BOARD
 inline int lsb(U64 bb) { 
 	if(bb == 0)
 		return 64;//thecnically its -1 but i cant
@@ -36,9 +27,65 @@ inline int pop_lsb(U64& bb) {
 	return s; 
 } 
 
-inline bool is_occ(U64 bb, int sq) { return bb >> sq & 1; }//checks if square number sq is occupied in board bb
+inline bool is_occ(U64 bb, int sq) { //checks if square number sq is occupied in board bb
+	return bb >> sq & 1; 
+}
 inline void set_bit(U64& bb, int sq)   { bb |= 1ULL << sq; }
 inline void clear_bit(U64& bb, int sq) { bb &= ~(1ULL << sq); }
+
+//BOARD CHANGE OPERATIONS
+void set_board_piece(Position &board, bool color, int sq, int piece){
+	set_bit(board.pieces[color][piece],sq);
+	set_bit(board.occ[color],sq);
+	set_bit(board.all,sq);
+}
+
+void clear_board_piece(Position &board, bool color, int sq, int piece){
+	clear_bit(board.pieces[color][piece],sq);
+	clear_bit(board.occ[color],sq);
+	clear_bit(board.all,sq);
+}
+
+//COORDINATES OPERATION
+bool on_board(Vector2 pos){
+    //checks if the position is on the chessboard
+    return (pos.x >= corner.x && pos.x <= corner.x + chessboardsize && pos.y >= corner.y && pos.y <= corner.y + chessboardsize);
+}
+int invert_onb(int sq){//invert on board
+	//devo invertire da un lato all'altro: A1 diventa H1 e viceversa
+	int res,ris;
+	res = sq%8;
+	ris = 56-sq+2*res;
+	return ris;
+}
+Vector2 invert_coord(Vector2 coord){
+	coord.x = 7-coord.x;
+	coord.y = 7-coord.y;
+	return coord;
+}
+int coord_to_sq(Vector2 coord){
+	int row = coord.y;
+	int col = coord.x;
+	//roba
+	//coords 0 =
+	int sq = row*8 + col;
+	return sq;
+}
+
+Vector2 sq_to_coord(int sq){
+	int col = sq%8;
+	
+	int row = (sq - col)/8;
+	return (Vector2){(float)col,(float)row};
+}
+
+Vector2 chessboard_pos(Vector2 abs_pos){
+	Vector2 chesspos = Vector2Subtract(abs_pos, corner);//chessboard pos: quanti pixel dal bordo
+	
+	int row = floor(((float)chesspos.y)/(float)squaresize);//da 0 a 7
+	int col = floor(((float)chesspos.x)/(float)squaresize);
+	return Vector2{(float)col,(float)row};
+}
 
 /*reminder: bitwise operations
 & = and
@@ -47,22 +94,25 @@ inline void clear_bit(U64& bb, int sq) { bb &= ~(1ULL << sq); }
 ^ = xor
 */
 
+vector<Position>record;
+
+Position startingp;
+Position currentp;
+Position emptyp;
+
 void board_reset(void){
     record.clear();
+	arrows.clear();
 	//record.push_back(startingp);
 	currentp = startingp;
+
+	held_piece = EMPTY;
+	held_piece_sq = NO_SQ;
+	arrows.clear();
 }
 
-void set_board_piece(Position &board, bool color, int sq, int piece){
-	set_bit(board.pieces[color][piece],sq);
-	set_bit(board.occ[color],sq);
-	set_bit(board.all,sq);
-}
-int invert_onb(int sq){
-	//return 7*8-v;
-	//devo invertire da un lato all'altro: A1 diventa H1 e viceversa
-	return 0;
-}
+
+
 void set_starting_pos(bool color){
 	//pezzi singoli -> cambi anche typeon
 	//devo fare cosa simmetrica rispetto alla riga in messo: row = 0 = 7-> media e 3.5
@@ -74,7 +124,7 @@ void set_starting_pos(bool color){
 
 	int sq, piece;
 	piece = PAWN;
-	for(int i=B1;i<B8;i++){//pawns
+	for(int i=B1;i<=B8;i++){//pawns
 		sq = (color)?i:invert_onb(i);
 		set_board_piece(startingp, color, sq, piece);
 	}
@@ -111,6 +161,17 @@ void set_starting_pos(bool color){
 	sq = (color)?sq:invert_onb(sq);
 	set_board_piece(startingp, color, sq, piece);
 
+	//queen
+	piece = QUEEN;
+	sq = A4;//perche mi mette il re su a4?
+	sq = (color)?sq:invert_onb(sq);
+	set_board_piece(startingp, color, sq, piece);
+
+	//king
+	piece = KING;
+	sq = A5;
+	sq = (color)?sq:invert_onb(sq);
+	set_board_piece(startingp, color, sq, piece);
 }
 
 void board_init(void){
@@ -119,21 +180,9 @@ void board_init(void){
 	corner.y/=2;
 	chessboardsize=squaresize*8;
 	corner.x = (ScreenWidth - chessboardsize ) - corner.y;
+	
 
-    texall[0][0] = LoadTexture("../images/bp.png");
-	texall[0][1] = LoadTexture("../images/bn.png");
-	texall[0][2] = LoadTexture("../images/bb.png");
-	texall[0][3] = LoadTexture("../images/br.png");
-	texall[0][4] = LoadTexture("../images/bq.png");
-	texall[0][5] = LoadTexture("../images/bk.png");
-	
-	texall[1][0] = LoadTexture("../images/wp.png");
-	texall[1][1] = LoadTexture("../images/wn.png");
-	texall[1][2] = LoadTexture("../images/wb.png");
-	texall[1][3] = LoadTexture("../images/wr.png");
-	texall[1][4] = LoadTexture("../images/wq.png");
-	texall[1][5] = LoadTexture("../images/wk.png");
-	
+	load_pieces_textures();
 	//starting pos assign
 	startingp.w_to_move=1;
 	startingp = emptyp;
@@ -141,34 +190,14 @@ void board_init(void){
 	set_starting_pos(1);
 	//fai or per trovare all
 	startingp.all = startingp.occ[0] | startingp.occ[1];
+
+	
 	board_reset();
 }
 
-float scalepiece = 0.5f;
 
-void pieces_draw(bool turn){
-	Position lastp = currentp;
-	for (int i=0;i<6;i++){//type of piece currently looking at
-		while(lastp.pieces[turn][i]){
-			int sq = pop_lsb(lastp.pieces[turn][i]);
-			//draw
-			int col = sq%8;
-			int row = (sq - col)/8;
+//board handle
 
-			Vector2 pos;
-			pos.x = corner.x + squaresize*col + (float)squaresize/2.0f - texall[turn][i].width*scalepiece/2.0f;
-			pos.y = corner.y + squaresize*row + (float)squaresize/2.0f - texall[turn][i].height*scalepiece/2.0f;
-			
-			DrawTextureEx(
-				texall[turn][i],
-				pos,
-				0,
-				scalepiece,
-				WHITE
-			);
-		}
-	}
-}
 
 void board_draw(void){
 
@@ -195,4 +224,5 @@ void board_draw(void){
 	pieces_draw(0);
 	pieces_draw(1);
 	
+	draw_features();
 }
