@@ -2,7 +2,6 @@
 #define CHESSBOARD_H
 
 #include "main.h"
-#include "board_features.h"
 #include <cstdint>
 
 
@@ -43,15 +42,28 @@ extern Vector2 corner;
 extern int squaresize, chessboardsize;
 
 
-inline int lsb(U64 bb);
-inline int msb(U64 bb);
-inline int pop_lsb(U64 &bb);
-inline bool is_occ(U64 bb, int sq);
-inline void set_bit(U64 &bb, int sq);
-inline void clear_bit(U64 &bb, int sq);
+//BIT OPERATIONS ON BOARD
+inline int lsb(U64 bb) { 
+	if(bb == 0)
+		return NO_SQ;//thecnically its -1 but i cant
+	return __builtin_ctzll(bb); 
+}//HAVE TO CHECK ITS NOT 64 when i use it: almost impossible but who knows -> possible if no pieces of a type
+inline int msb(U64 bb) { 
+	if(bb == 0)
+		return NO_SQ;//this time its correct
+	return 63 - __builtin_clzll(bb); //63 - leading 0s
+}
+inline int pop_lsb(U64& bb) { 
+	int s = lsb(bb); 
+	bb &= bb - 1; 
+	return s; //remind to check if 64
+} 
+inline bool is_occ(U64 bb, int sq) { return bb >> sq & 1; }//checks if square number sq is occupied in board bb
+inline void set_bit(U64& bb, int sq)   { bb |= 1ULL << sq; }
+inline void clear_bit(U64& bb, int sq) { bb &= ~(1ULL << sq); }
 
-void set_board_piece(Position& board, bool color, int sq, int piece);
 void clear_board_piece(Position& board, bool color, int sq, int piece);
+void set_board_piece(Position& board, bool color, int sq, int piece);
 
 bool on_board(Vector2 pos);
 int invert_onb(int sq);
@@ -64,6 +76,8 @@ Vector2 chessboard_pos(Vector2 abs_pos);
 
 void board_reset(void);
 void board_init(void);
+
+void change_turn(void);
 
 void board_draw(void);
 

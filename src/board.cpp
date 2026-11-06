@@ -9,41 +9,26 @@ using namespace std;
 Vector2 corner;
 int squaresize, chessboardsize;
 
-//BIT OPERATIONS ON BOARD
-inline int lsb(U64 bb) { 
-	if(bb == 0)
-		return 64;//thecnically its -1 but i cant
-	return __builtin_ctzll(bb); 
-}//HAVE TO CHECK ITS NOT 64 when i use it: almost impossible but who knows
-inline int msb(U64 bb) { 
-	if(bb == 0)
-		return 64;//correct
-	return 63 - __builtin_clzll(bb); //63 - leading 0s
-}
 
-inline int pop_lsb(U64& bb) { 
-	int s = lsb(bb); 
-	bb &= bb - 1; 
-	return s; 
-} 
-
-inline bool is_occ(U64 bb, int sq) { //checks if square number sq is occupied in board bb
-	return bb >> sq & 1; 
-}
-inline void set_bit(U64& bb, int sq)   { bb |= 1ULL << sq; }
-inline void clear_bit(U64& bb, int sq) { bb &= ~(1ULL << sq); }
 
 //BOARD CHANGE OPERATIONS
-void set_board_piece(Position &board, bool color, int sq, int piece){
-	set_bit(board.pieces[color][piece],sq);
-	set_bit(board.occ[color],sq);
-	set_bit(board.all,sq);
-}
 
 void clear_board_piece(Position &board, bool color, int sq, int piece){
-	clear_bit(board.pieces[color][piece],sq);
-	clear_bit(board.occ[color],sq);
-	clear_bit(board.all,sq);
+	clear_bit(board.pieces[color][piece], sq);
+	clear_bit(board.occ[color], sq);
+	clear_bit(board.all, sq);
+	board.type_on[sq] = EMPTY;
+}
+
+void set_board_piece(Position &board, bool color, int sq, int piece){
+	if(board.type_on[sq]!=EMPTY){
+		clear_board_piece(board, !color, sq, board.type_on[sq]);
+	}
+	
+	set_bit(board.pieces[color][piece], sq);
+	set_bit(board.occ[color], sq);
+	set_bit(board.all, sq);
+	board.type_on[sq] = piece;
 }
 
 //COORDINATES OPERATION
@@ -63,19 +48,19 @@ Vector2 invert_coord(Vector2 coord){
 	coord.y = 7-coord.y;
 	return coord;
 }
-int coord_to_sq(Vector2 coord){
+int coord_to_sq(Vector2 coord){//qualcosa di sbagliato
 	int row = coord.y;
 	int col = coord.x;
 	//roba
 	//coords 0 =
-	int sq = row*8 + col;
+	int sq = (7-row)*8 + col;
 	return sq;
 }
 
 Vector2 sq_to_coord(int sq){
 	int col = sq%8;
 	
-	int row = (sq - col)/8;
+	int row = 7-(sq - col)/8;
 	return (Vector2){(float)col,(float)row};
 }
 
@@ -102,9 +87,8 @@ Position emptyp;
 
 void board_reset(void){
     record.clear();
-	arrows.clear();
-	//record.push_back(startingp);
 	currentp = startingp;
+	record.push_back(currentp);
 
 	held_piece = EMPTY;
 	held_piece_sq = NO_SQ;
@@ -114,7 +98,6 @@ void board_reset(void){
 
 
 void set_starting_pos(bool color){
-	//pezzi singoli -> cambi anche typeon
 	//devo fare cosa simmetrica rispetto alla riga in messo: row = 0 = 7-> media e 3.5
 	//0 -> 7
 	//1 -> 6
@@ -184,8 +167,12 @@ void board_init(void){
 
 	load_pieces_textures();
 	//starting pos assign
-	startingp.w_to_move=1;
+	for(int i=0;i<64;i++){
+		emptyp.type_on[i]=EMPTY;
+	}
 	startingp = emptyp;
+	startingp.w_to_move=1;
+
 	set_starting_pos(0);
 	set_starting_pos(1);
 	//fai or per trovare all
@@ -197,7 +184,11 @@ void board_init(void){
 
 
 //board handle
-
+void change_turn(void){
+	currentp.w_to_move = !currentp.w_to_move;
+	record.push_back(currentp);
+	arrows.clear();
+}
 
 void board_draw(void){
 

@@ -1,6 +1,8 @@
 #include "board_features.h"
 #include "board.h"
 #include "pieces.h"
+#include "menu_main.h"
+
 using namespace std;
 
 
@@ -11,12 +13,23 @@ Vector2 st_arrow_pos = (Vector2){-1,-1};
 vector<pair<Vector2,Vector2>>arrows;
 float scale_arrow_width = 0.15f;
 void handle_mouse(void){
-    
     Vector2 mouse_position = GetMousePosition();
-    if(!on_board(mouse_position))return;
+    if(!on_board(mouse_position)){
+		if(held_piece!=EMPTY){
+			set_board_piece(currentp, currentp.w_to_move, held_piece_sq, held_piece);
+			held_piece=EMPTY;
+			held_piece_sq = NO_SQ;
+		}
+		return;
+	}
 
     Vector2 board_pos = chessboard_pos(mouse_position);
+
+	if(!settings[TURN])//giochi come il nero:devi invertire
+		board_pos=invert_coord(board_pos);
+	
     int sq = coord_to_sq(board_pos);
+	//cout<<"ti trovi in "<<board_pos.x<<" "<<board_pos.y<<" al quadrato n "<<sq<<endl;
     //handle del pezzo in mano
     if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && is_occ(currentp.occ[currentp.w_to_move], sq)){//sicuramente non avevo pezzi in mano
         held_piece = currentp.type_on[sq];
@@ -31,6 +44,7 @@ void handle_mouse(void){
 		
 		if(legal_move){//moves
 			set_board_piece(currentp, currentp.w_to_move, sq, held_piece);
+			change_turn();
 		}
 		else{//return to original spot
 			set_board_piece(currentp, currentp.w_to_move, held_piece_sq, held_piece);
@@ -87,8 +101,8 @@ void draw_features(void){
 
 	if(held_piece != EMPTY){
 		Vector2 pos = GetMousePosition();
-		pos.x-=texall[currentp.w_to_move][held_piece].width*scalepiece;
-		pos.y-=texall[currentp.w_to_move][held_piece].height*scalepiece;
+		pos.x-=texall[currentp.w_to_move][held_piece].width/2.0f*scalepiece;
+		pos.y-=texall[currentp.w_to_move][held_piece].height/2.0f*scalepiece;
 		draw_piece(currentp.w_to_move,held_piece, pos);
 	}
 

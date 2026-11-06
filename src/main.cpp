@@ -1,6 +1,7 @@
 #include "main.h"
 #include "menu_main.h"
 #include "game_main.h"
+#include "board.h"
 
 using namespace std;
 
@@ -60,6 +61,7 @@ void generic_event_handler(void){
 
             event_handler = game_event_handler;
             screen_drawer = game_drawer;
+            board_reset();
         }
         else {
 

@@ -43,7 +43,7 @@ void pieces_draw(bool turn){
 			//draw
 			Vector2 coords = sq_to_coord(sq);
 
-			if(settings[TURN]){//se è bianco devo invertire
+			if(!settings[TURN]){//se è nero devo invertire
 				coords = invert_coord(coords);
 			}
 			int col = coords.x;

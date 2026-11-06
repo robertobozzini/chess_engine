@@ -2,7 +2,8 @@ menu:
     sistemo posizione e dimensione bottoni vari
 
 game:
-    come mai array di che pezzo? non conveniva direttamente?
+    gestisco cambio di turno
+
     faccio tenere pezzo in mano e arrows:
     capisco come sistemare arrows per far si che non esploda
 
