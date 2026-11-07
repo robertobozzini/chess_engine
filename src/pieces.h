@@ -1,6 +1,7 @@
 #ifndef PIECES_H
 #define PIECES_H
 #include "main.h"
+#include "board.h"
 
 enum Piece : u_int8_t { PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY};
 extern Texture2D texall[2][6];

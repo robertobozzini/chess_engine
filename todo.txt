@@ -3,6 +3,8 @@ menu:
 
 game:
     gestisco possibili mosse: lista? le calcolo al momento per ogni pezzo?
-    controllo di legalità (Scacchi ecc)
+    sistemo controllo di legalità (Scacchi ecc)
+    sistemo tutti gli header ecc per essere piu ordinati
+    faccio movimento via raggio
 
 

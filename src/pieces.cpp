@@ -78,7 +78,7 @@ uint64_t find_moves(Position state, u_int8_t piece, int sq){
 			break;
 	}
 
-	moves_table = moves_table & ~find_illegal(state);
+	//moves_table = moves_table & ~find_illegal(state);//ITS NOT ACTUALLY LIKE THIS
 	return moves_table;
 }
 
