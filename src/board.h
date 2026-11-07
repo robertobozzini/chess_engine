@@ -5,7 +5,6 @@
 #include <cstdint>
 
 
-typedef uint64_t U64;
 
 enum Square : int { 
 A1, A2, A3, A4, A5, A6, A7, A8, 
@@ -21,9 +20,9 @@ H1, H2, H3, H4, H5, H6, H7, H8,
 
 
 struct Position {
-    U64 pieces[2][6];   //[color][type] -> in un solo numero mi salvo tutte le posizioni in cui un pezzo di un colore si trova: se il bit è 1 se ne trova 1
-    U64 occ[2]; //occupied: fai gli or tra i 6 pezzi di un colore
-    U64 all; //or di occ[0] e occ[1]
+    uint64_t pieces[2][6];   //[color][type] -> in un solo numero mi salvo tutte le posizioni in cui un pezzo di un colore si trova: se il bit è 1 se ne trova 1
+    uint64_t occ[2]; //occupied: fai gli or tra i 6 pezzi di un colore
+    uint64_t all; //or di occ[0] e occ[1]
     uint8_t  type_on[64]; 
     bool w_to_move; //white to move?
     //uint8_t castling; 
@@ -43,24 +42,24 @@ extern int squaresize, chessboardsize;
 
 
 //BIT OPERATIONS ON BOARD
-inline int lsb(U64 bb) { 
+inline int lsb(uint64_t bb) { 
 	if(bb == 0)
 		return NO_SQ;//thecnically its -1 but i cant
 	return __builtin_ctzll(bb); 
 }//HAVE TO CHECK ITS NOT 64 when i use it: almost impossible but who knows -> possible if no pieces of a type
-inline int msb(U64 bb) { 
+inline int msb(uint64_t bb) { 
 	if(bb == 0)
 		return NO_SQ;//this time its correct
 	return 63 - __builtin_clzll(bb); //63 - leading 0s
 }
-inline int pop_lsb(U64& bb) { 
+inline int pop_lsb(uint64_t& bb) { 
 	int s = lsb(bb); 
 	bb &= bb - 1; 
 	return s; //remind to check if 64
 } 
-inline bool is_occ(U64 bb, int sq) { return bb >> sq & 1; }//checks if square number sq is occupied in board bb
-inline void set_bit(U64& bb, int sq)   { bb |= 1ULL << sq; }
-inline void clear_bit(U64& bb, int sq) { bb &= ~(1ULL << sq); }
+inline bool is_occ(uint64_t bb, int sq) { return bb >> sq & 1; }//checks if square number sq is occupied in board bb
+inline void set_bit(uint64_t& bb, int sq)   { bb |= 1ULL << sq; }
+inline void clear_bit(uint64_t& bb, int sq) { bb &= ~(1ULL << sq); }
 
 void clear_board_piece(Position& board, bool color, int sq, int piece);
 void set_board_piece(Position& board, bool color, int sq, int piece);

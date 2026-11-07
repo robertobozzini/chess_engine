@@ -24,6 +24,64 @@ void load_pieces_textures(void){
 	texall[1][5] = LoadTexture("../images/wk.png");
 }
 
+uint64_t pawn_att[2][64], knight_att[64], king_att[64], ray[8][64]; //attack tables
+
+uint64_t poss_moves;
+
+static void add_if_on(uint64_t& bb, int col, int row){
+	if(row<0 || row>=8 || col<0 || col>=8)return;
+	int sq = coord_to_sq((Vector2){(float)col,(float)row});
+	set_bit(bb, sq);
+}
+
+void att_tables_init(void){
+	//ps for the pawns i need to add captures
+	static const int KN[8][2] = {{1,2},{2,1},{2,-1},{1,-2},{-1,-2},{-2,-1},{-2,1},{-1,2}};
+    static const int KG[8][2] = {{0,1},{1,1},{1,0},{1,-1},{0,-1},{-1,-1},{-1,0},{-1,1}};
+	for(int sq=0; sq<64;sq++){
+		auto [col,row] = sq_to_coord(sq);
+
+		//pawns
+		add_if_on(pawn_att[0][sq], col, row+1);
+		add_if_on(pawn_att[1][sq], col, row-1);
+		if(row == 1)add_if_on(pawn_att[0][sq], col, row+2);//2 square step if you are at a certain sqare with a certain color
+		else if (row == 6)add_if_on(pawn_att[1][sq], col, row-2);
+
+		for(auto &dir:KN)//knight
+			add_if_on(knight_att[sq], col+dir[0], row + dir[1]);
+
+		for(auto &dir:KG)//king
+			add_if_on(king_att[sq], col+dir[0], row + dir[1]);
+	}
+}
+uint64_t find_illegal(Position state){//for a certain position 
+	uint64_t illegal_moves = 0;
+
+	return illegal_moves;
+}
+uint64_t find_moves(Position state, u_int8_t piece, int sq){
+	uint64_t moves_table = 0UL;
+	bool turn = state.w_to_move;
+
+	switch(piece){
+		case PAWN:
+			moves_table = pawn_att[turn][sq]&~state.occ[turn];
+			break;
+		case KNIGHT:
+			moves_table = knight_att[sq]&~state.occ[turn];
+			break;
+		case KING:
+			moves_table = king_att[sq]&~state.occ[turn];
+			break;
+		default:
+			moves_table = 0UL;
+			break;
+	}
+
+	moves_table = moves_table & ~find_illegal(state);
+	return moves_table;
+}
+
 void draw_piece(bool turn, u_int8_t piece, Vector2 pos){
 
     DrawTextureEx(

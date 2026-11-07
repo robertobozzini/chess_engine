@@ -166,6 +166,8 @@ void board_init(void){
 	
 
 	load_pieces_textures();
+	att_tables_init();
+	
 	//starting pos assign
 	for(int i=0;i<64;i++){
 		emptyp.type_on[i]=EMPTY;
@@ -178,7 +180,6 @@ void board_init(void){
 	//fai or per trovare all
 	startingp.all = startingp.occ[0] | startingp.occ[1];
 
-	
 	board_reset();
 }
 

@@ -15,10 +15,15 @@ float scale_arrow_width = 0.15f;
 void handle_mouse(void){
     Vector2 mouse_position = GetMousePosition();
     if(!on_board(mouse_position)){
+
 		if(held_piece!=EMPTY){
 			set_board_piece(currentp, currentp.w_to_move, held_piece_sq, held_piece);
 			held_piece=EMPTY;
 			held_piece_sq = NO_SQ;
+		}
+
+		if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
+			arrows.clear();
 		}
 		return;
 	}
@@ -28,6 +33,20 @@ void handle_mouse(void){
 	if(!settings[TURN])//giochi come il nero:devi invertire
 		board_pos=invert_coord(board_pos);
 	
+
+	//arrows
+    if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
+        st_arrow_pos = board_pos;
+
+    }
+    else if(IsMouseButtonReleased(MOUSE_BUTTON_RIGHT) && st_arrow_pos.x !=-1){
+        if(st_arrow_pos != board_pos)
+            arrows.push_back({st_arrow_pos,board_pos});
+        
+        st_arrow_pos=(Vector2){-1,-1};
+    }
+
+
     int sq = coord_to_sq(board_pos);
 	//cout<<"ti trovi in "<<board_pos.x<<" "<<board_pos.y<<" al quadrato n "<<sq<<endl;
     //handle del pezzo in mano
@@ -39,8 +58,8 @@ void handle_mouse(void){
 		clear_board_piece(currentp, currentp.w_to_move, sq, held_piece);
     }
     else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && held_piece != EMPTY){
-
-		bool legal_move = true;
+		u_int64_t legal_moves = find_moves(currentp, held_piece, held_piece_sq);
+		bool legal_move = is_occ(legal_moves, sq);
 		
 		if(legal_move){//moves
 			set_board_piece(currentp, currentp.w_to_move, sq, held_piece);
@@ -53,17 +72,6 @@ void handle_mouse(void){
 		held_piece_sq = NO_SQ;
     }
     
-    //arrows
-    if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
-        st_arrow_pos = board_pos;
-
-    }
-    else if(IsMouseButtonReleased(MOUSE_BUTTON_RIGHT) && st_arrow_pos.x !=-1){
-        if(st_arrow_pos != board_pos)
-            arrows.push_back({st_arrow_pos,board_pos});
-        
-        st_arrow_pos=(Vector2){-1,-1};
-    }
 
 }
 
@@ -96,7 +104,30 @@ void drawArrow(Vector2 start, Vector2 end){
 	
 }
 
+void draw_attack_table(uint64_t table){
+	while(table){
+		int sq = pop_lsb(table);
+		auto [col,row] = sq_to_coord(sq);
+		Vector2 center;
+		center.x = corner.x + squaresize*col + squaresize/2.0f;
+		center.y = corner.y + squaresize*row + squaresize/2.0f;
+
+		if(is_occ(currentp.all, sq)){
+			DrawRing(center, squaresize*0.38f, squaresize*0.45f, 0, 360, 36, Fade(BROWN, 0.6f));
+		}
+		else{
+			DrawCircleV(center, squaresize*0.15f, Fade(BROWN,0.35f));
+		}
+	}
+}
+
 void draw_features(void){
+
+	//arrows
+	for(auto [start,end]:arrows){
+		drawArrow(start,end);
+	}
+
 	//held piece
 
 	if(held_piece != EMPTY){
@@ -104,10 +135,8 @@ void draw_features(void){
 		pos.x-=texall[currentp.w_to_move][held_piece].width/2.0f*scalepiece;
 		pos.y-=texall[currentp.w_to_move][held_piece].height/2.0f*scalepiece;
 		draw_piece(currentp.w_to_move,held_piece, pos);
-	}
 
-	//arrows
-	for(auto [start,end]:arrows){
-		drawArrow(start,end);
+		draw_attack_table(find_moves(currentp, held_piece, held_piece_sq));
+
 	}
 }

@@ -7,7 +7,7 @@
 #include<raymath.h>
 #include<iostream>
 #include<algorithm>
-
+#include<cstdint>
 
 extern int ScreenWidth;
 extern int ScreenHeight;

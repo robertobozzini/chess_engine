@@ -2,9 +2,7 @@ menu:
     sistemo posizione e dimensione bottoni vari
 
 game:
-    gestisco cambio di turno
-
-    faccio tenere pezzo in mano e arrows:
-    capisco come sistemare arrows per far si che non esploda
+    gestisco possibili mosse: lista? le calcolo al momento per ogni pezzo?
+    controllo di legalità (Scacchi ecc)
 
 
