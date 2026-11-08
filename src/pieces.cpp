@@ -5,7 +5,7 @@
 #include "board_features.h"
 Texture2D texall[2][6];
 
-int piece_value[7] = {1,3,3,5,9,1000,0};
+float piece_value[7] = {1.0f,3.0f,3.2f,5.0f,9.0f,1000.0f,0.0f};
 float scalepiece = 0.5f;
 
 void load_pieces_textures(void){
@@ -58,7 +58,7 @@ void att_tables_init(void){
 		for(auto &dir:KG)//king
 			add_if_in(king_att[sq], col+dir[0], row + dir[1]);
 
-		for(int dir=E;dir<=SW;dir++){
+		for(uint8_t dir=E;dir<=SW;dir++){
 			ray[dir][sq] = 0;//devo mettere roba
 			Vector2 pos = sq_to_coord(sq);
 			pos = Vector2Add(pos,directions[dir]);
@@ -79,7 +79,7 @@ uint64_t find_illegal(Position state){//for a certain position
 	return illegal_moves;
 }
 
-uint64_t ray_attacks(u_int8_t dir, int sq, uint64_t occ){
+uint64_t ray_attacks(uint8_t dir, int sq, uint64_t occ){
 	uint64_t table = ray[dir][sq];
 	uint64_t blockers = table & occ;
 	int bit;
@@ -88,7 +88,7 @@ uint64_t ray_attacks(u_int8_t dir, int sq, uint64_t occ){
 	return table & ~ray[dir][bit];
 }
 
-uint64_t find_moves(Position state, u_int8_t piece, int sq){
+uint64_t find_moves(Position state, uint8_t piece, int sq){
 	uint64_t moves_table = 0UL;
 	bool turn = state.w_to_move;
 
@@ -103,30 +103,36 @@ uint64_t find_moves(Position state, u_int8_t piece, int sq){
 			moves_table = king_att[sq]&~state.occ[turn];
 			break;
 		case BISHOP:
-			for(int dir=NE;dir<=SW;dir++){
-				moves_table &= ray_attacks(dir, sq, state.all);
+			for(uint8_t dir=NE;dir<=SW;dir++){
+				moves_table |= ray_attacks(dir, sq, state.all);
 			}
 			moves_table &=~state.occ[turn];
 			break;
 		case ROOK:
-			for(int dir=E;dir<=S;dir++){
-				moves_table &=ray_attacks(dir, sq, state.all);
+			for(uint8_t dir=E;dir<=S;dir++){
+				moves_table |=ray_attacks(dir, sq, state.all);
 			}
 			moves_table &=~state.occ[turn];
 			break;
 		case QUEEN:
-			for(int dir=E;dir<=SW;dir++){
-				moves_table &= ray_attacks(dir, sq, state.all); 
+			for(uint8_t dir=E;dir<=SW;dir++){
+				moves_table |= ray_attacks(dir, sq, state.all); 
 			}
 			moves_table &=~state.occ[turn];
 			break;
 	}
+	//gotta filter out illegal moves
+	/*
+	i could check IF the piece can move (on same diagonal with king?)
+	*/
 
 	//moves_table = moves_table & ~find_illegal(state);//ITS NOT ACTUALLY LIKE THIS
 	return moves_table;
 }
 
-void draw_piece(bool turn, u_int8_t piece, Vector2 pos){
+
+
+void draw_piece(bool turn, uint8_t piece, Vector2 pos){
 
     DrawTextureEx(
         texall[turn][piece],

@@ -17,7 +17,7 @@ bool game_event_handler(){
         menu_section = 0;
         return true;
     }
-    handle_mouse();
+    handle_features();
     return false;
 }
 

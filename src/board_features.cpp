@@ -2,16 +2,21 @@
 #include "board.h"
 #include "pieces.h"
 #include "menu_main.h"
+#include "board_features.h"
+#include "evaluation.h"
 
 using namespace std;
 
 
 
-u_int8_t held_piece;// = EMPTY;//empty
+uint8_t held_piece;// = EMPTY;//empty
 int held_piece_sq;// = NO_SQ;
 Vector2 st_arrow_pos = (Vector2){-1,-1};
 vector<pair<Vector2,Vector2>>arrows;
 float scale_arrow_width = 0.15f;
+
+
+
 void handle_mouse(void){
     Vector2 mouse_position = GetMousePosition();
     if(!on_board(mouse_position)){
@@ -73,6 +78,12 @@ void handle_mouse(void){
     }
     
 
+}
+
+void handle_features(void){
+	handle_mouse();
+
+	target_eval_val = evaluate_pos(currentp);
 }
 
 
@@ -139,4 +150,6 @@ void draw_features(void){
 		draw_attack_table(find_moves(currentp, held_piece, held_piece_sq));
 
 	}
+
+	eval_bar_draw();
 }
