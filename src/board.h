@@ -65,6 +65,7 @@ void clear_board_piece(Position& board, bool color, int sq, int piece);
 void set_board_piece(Position& board, bool color, int sq, int piece);
 
 bool on_board(Vector2 pos);
+bool in_board(Vector2 coord);
 int invert_onb(int sq);
 Vector2 invert_coord(Vector2 coord);
 

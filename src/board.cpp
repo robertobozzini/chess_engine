@@ -36,6 +36,10 @@ bool on_board(Vector2 pos){
     //checks if the position is on the chessboard
     return (pos.x >= corner.x && pos.x <= corner.x + chessboardsize && pos.y >= corner.y && pos.y <= corner.y + chessboardsize);
 }
+bool in_board(Vector2 coord){
+	return (coord.x>=0 && coord.x<8 && coord.y>=0 && coord.y<8);
+}
+
 int invert_onb(int sq){//invert on board
 	//devo invertire da un lato all'altro: A1 diventa H1 e viceversa
 	int res,ris;

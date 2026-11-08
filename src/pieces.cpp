@@ -25,12 +25,17 @@ void load_pieces_textures(void){
 }
 
 uint64_t pawn_att[2][64], knight_att[64], king_att[64], ray[8][64]; //attack tables
+//{E, W, N, S, NE, NW, SE, SW}; 
+Vector2 directions[8]={{-1,0},{+1,0},{0,-1},{0,+1},{-1,-1},{+1,-1},{-1,+1},{+1,+1}};
 
 uint64_t poss_moves;
 
-static void add_if_on(uint64_t& bb, int col, int row){
-	if(row<0 || row>=8 || col<0 || col>=8)return;
-	int sq = coord_to_sq((Vector2){(float)col,(float)row});
+static void add_if_in(uint64_t& bb, int col, int row){
+	//if(row<0 || row>=8 || col<0 || col>=8)return;
+	Vector2 pos = (Vector2){(float)col,(float)row};
+	if(!in_board(pos))return;
+
+	int sq = coord_to_sq(pos);
 	set_bit(bb, sq);
 }
 
@@ -42,23 +47,47 @@ void att_tables_init(void){
 		auto [col,row] = sq_to_coord(sq);
 
 		//pawns
-		add_if_on(pawn_att[0][sq], col, row+1);
-		add_if_on(pawn_att[1][sq], col, row-1);
-		if(row == 1)add_if_on(pawn_att[0][sq], col, row+2);//2 square step if you are at a certain sqare with a certain color
-		else if (row == 6)add_if_on(pawn_att[1][sq], col, row-2);
+		add_if_in(pawn_att[0][sq], col, row+1);
+		add_if_in(pawn_att[1][sq], col, row-1);
+		if(row == 1)add_if_in(pawn_att[0][sq], col, row+2);//2 square step if you are at a certain sqare with a certain color
+		else if (row == 6)add_if_in(pawn_att[1][sq], col, row-2);
 
 		for(auto &dir:KN)//knight
-			add_if_on(knight_att[sq], col+dir[0], row + dir[1]);
+			add_if_in(knight_att[sq], col+dir[0], row + dir[1]);
 
 		for(auto &dir:KG)//king
-			add_if_on(king_att[sq], col+dir[0], row + dir[1]);
+			add_if_in(king_att[sq], col+dir[0], row + dir[1]);
+
+		for(int dir=E;dir<=SW;dir++){
+			ray[dir][sq] = 0;//devo mettere roba
+			Vector2 pos = sq_to_coord(sq);
+			pos = Vector2Add(pos,directions[dir]);
+
+			while(in_board(pos)){
+				add_if_in(ray[dir][sq], pos.x, pos.y);
+				pos = Vector2Add(pos,directions[dir]);
+			}
+			
+		}
 	}
 }
 uint64_t find_illegal(Position state){//for a certain position 
-	uint64_t illegal_moves = 0;
+	//probably will change -> checks if position is illegal? my checking if king is attacked? (old approach) -> probably not optimal 
+	//mmmmm
+	uint64_t illegal_moves = 0UL;
 
 	return illegal_moves;
 }
+
+uint64_t ray_attacks(u_int8_t dir, int sq, uint64_t occ){
+	uint64_t table = ray[dir][sq];
+	uint64_t blockers = table & occ;
+	int bit;
+	bool increasesq = (dir == N || dir == E || dir == NE || dir == NW);
+	bit = (increasesq)? lsb(blockers) : msb(blockers);
+	return table & ~ray[dir][bit];
+}
+
 uint64_t find_moves(Position state, u_int8_t piece, int sq){
 	uint64_t moves_table = 0UL;
 	bool turn = state.w_to_move;
@@ -73,8 +102,23 @@ uint64_t find_moves(Position state, u_int8_t piece, int sq){
 		case KING:
 			moves_table = king_att[sq]&~state.occ[turn];
 			break;
-		default:
-			moves_table = 0UL;
+		case BISHOP:
+			for(int dir=NE;dir<=SW;dir++){
+				moves_table &= ray_attacks(dir, sq, state.all);
+			}
+			moves_table &=~state.occ[turn];
+			break;
+		case ROOK:
+			for(int dir=E;dir<=S;dir++){
+				moves_table &=ray_attacks(dir, sq, state.all);
+			}
+			moves_table &=~state.occ[turn];
+			break;
+		case QUEEN:
+			for(int dir=E;dir<=SW;dir++){
+				moves_table &= ray_attacks(dir, sq, state.all); 
+			}
+			moves_table &=~state.occ[turn];
 			break;
 	}
 
