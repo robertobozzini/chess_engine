@@ -18,7 +18,7 @@ extern uint64_t pawn_att[2][64], knight_att[64], king_att[64], ray[8][64]; //att
 void att_tables_init(void);
 
 uint64_t find_illegal(Position state);
-uint64_t find_moves(Position state, uint8_t piece, int sq);
+uint64_t find_moves(const Position &state, uint8_t piece, int sq);
 
 void load_pieces_textures(void);
 void draw_piece(bool turn, uint8_t piece, Vector2 pos);

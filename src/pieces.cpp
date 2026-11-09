@@ -97,12 +97,12 @@ void att_tables_init(void){
 uint64_t find_illegal(Position state){//for a certain position 
 	//probably will change -> checks if position is illegal? my checking if king is attacked? (old approach) -> probably not optimal 
 	//mmmmm
-	uint64_t illegal_moves = 0UL;
+	uint64_t illegal_moves = 0ULL;
 
 	return illegal_moves;
 }
 
-uint64_t ray_attacks(uint8_t dir, int sq, uint64_t occ){
+uint64_t ray_attacks(uint8_t dir, int sq, const uint64_t &occ){
 	uint64_t table = ray[dir][sq];
 	uint64_t blockers = table & occ;
 
@@ -114,18 +114,18 @@ uint64_t ray_attacks(uint8_t dir, int sq, uint64_t occ){
 	return table & ~ray[dir][bit];
 }
 
-uint64_t bishop_attacks(const Position &state, int sq){
-	uint64_t table = 0UL;
+uint64_t bishop_attacks(const uint64_t &occ, int sq){
+	uint64_t table = 0ULL;
 	for(uint8_t dir=NE;dir<=SW;dir++){
-		table |= ray_attacks(dir, sq, state.all);
+		table |= ray_attacks(dir, sq, occ);
 	}
 	return table;
 }
 
-uint64_t rook_attacks(const Position &state, int sq){
-	uint64_t table = 0UL;
+uint64_t rook_attacks(const uint64_t& occ, int sq){
+	uint64_t table = 0ULL;
 	for(uint8_t dir=E;dir<=S;dir++){
-		table |= ray_attacks(dir, sq, state.all);
+		table |= ray_attacks(dir, sq, occ);
 	}
 	return table;
 }
@@ -133,14 +133,14 @@ uint64_t rook_attacks(const Position &state, int sq){
 uint64_t attackers(const Position &state, int sq, bool by, uint64_t occ){
 	    return (pawn_att[!by][sq] & state.pieces[by][PAWN])      // tabella del colore OPPOSTO
          | (knight_att[sq] & state.pieces[by][KNIGHT]) | (king_att[sq] & state.pieces[by][KING])
-         | (bishop_attacks(state, sq) & (state.pieces[by][BISHOP]|state.pieces[by][QUEEN]))
-         | (rook_attacks(state, sq)   & (state.pieces[by][ROOK]  |state.pieces[by][QUEEN]));
+         | (bishop_attacks(occ, sq) & (state.pieces[by][BISHOP]|state.pieces[by][QUEEN]))
+         | (rook_attacks(occ, sq)   & (state.pieces[by][ROOK]  |state.pieces[by][QUEEN]));
 }
 
 uint64_t check_en_pas(const Position &state, int sq){//returns whether and where a pawn from square sq can enpassant in a certain position
-	uint64_t table = 0UL;
+	uint64_t table = 0ULL;
 	//probably not the best: i have to also check if this move is an en passant later on (or could just check a "Move" type element??)
-	if(state.lastmove.flag != EN_PASSANT) return 0UL;
+	if(state.lastmove.flag != EN_PASSANT) return 0ULL;
 	//Move lastmove = state.lastmove;
 	Vector2 topos = sq_to_coord(state.lastmove.to);
 	Vector2 pawnpos = sq_to_coord(sq);
@@ -153,14 +153,15 @@ uint64_t check_en_pas(const Position &state, int sq){//returns whether and where
 
 		}
 	}
+	return table;
 }
 
 uint64_t find_moves(const Position &state, uint8_t piece, int sq){
-	uint64_t moves_table = 0UL; //pseudo legal
+	uint64_t moves_table = 0ULL; //pseudo legal
 	bool turn = state.w_to_move;
 
 	switch(piece){
-		case PAWN:
+		case PAWN:{
 			moves_table =pawn_mv[turn][sq]&~state.all;//non deve essere occupato da nessuno
 			
 			Vector2 tmp = sq_to_coord(sq);//check per evitare che pedina salti pezzo in mezzo
@@ -174,12 +175,13 @@ uint64_t find_moves(const Position &state, uint8_t piece, int sq){
 
 			if(is_occ(state.all, nsq1) && is_occ(moves_table, nsq2)){
 				//devo rimediare
-				moves_table &= ~(1UL<<nsq2);
+				moves_table &= ~(1ULL<<nsq2);
 			}
 			moves_table |= pawn_att[turn][sq] & state.occ[!turn];
 			// + en passant
 			//moves_table |= check_en_pas(state, sq);
 			break;
+		}
 		case KNIGHT:
 			moves_table = knight_att[sq]&~state.occ[turn];
 			break;
@@ -188,15 +190,15 @@ uint64_t find_moves(const Position &state, uint8_t piece, int sq){
 			//+ short && long castle
 			break;
 		case BISHOP:
-			moves_table = bishop_attacks(state, sq);
+			moves_table = bishop_attacks(state.all, sq);
 			moves_table &=~state.occ[turn];
 			break;
 		case ROOK:
-			moves_table = rook_attacks(state, sq);
+			moves_table = rook_attacks(state.all, sq);
 			moves_table &=~state.occ[turn];
 			break;
 		case QUEEN:
-			moves_table = bishop_attacks(state, sq) | rook_attacks(state, sq);
+			moves_table = bishop_attacks(state.all, sq) | rook_attacks(state.all, sq);
 			moves_table &=~state.occ[turn];
 			break;
 	}
