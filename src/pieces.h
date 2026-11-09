@@ -8,8 +8,7 @@ extern Texture2D texall[2][6];
 extern float piece_value[7];
 extern float scalepiece;
 
-struct Move { uint8_t from, to, piece, captured, promo, flag; }; // captured/promo = EMPTY se assenti
-enum MoveFlag : uint8_t { NORMAL, DOUBLE_PUSH, EN_PASSANT, CASTLE };
+
 
 enum Dir: uint8_t {E, W, N, S, NE, NW, SE, SW}; //e = east, w = west, n = north, s = south, ne = north-east, ...
 extern int direction[8];//quanto devi aggiungere ad un quadrato per spostarlo in quella direzione

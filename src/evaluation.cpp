@@ -9,19 +9,28 @@ float target_eval_val = 0.0f;
 float eval_speed = 1.0f;
 
 float evaluate_pos(Position state){
+	
     float ris = 0.0f;
+	int sq;//per ora è solo valori: poi anche valori in base alla posizione
+	//MAPPE DI CONVENIENZA -> devo capire come farle (? da file forse)
+	float val;
     for(uint8_t piece = PAWN; piece<=KING; piece++){
         while(state.pieces[0][piece]){
-            ris -=piece_value[piece];
-            pop_lsb(state.pieces[0][piece]);
+            val =piece_value[piece];
+            sq = pop_lsb(state.pieces[0][piece]);
+
+			ris -= val;
         }
         while(state.pieces[1][piece]){
-            ris +=piece_value[piece];
-            pop_lsb(state.pieces[1][piece]);
+            val=piece_value[piece];
+            sq = pop_lsb(state.pieces[1][piece]);
+
+			ris+=val;
         }
     }
     if(held_piece != EMPTY){
-        ris+=(state.w_to_move)? piece_value[held_piece]: -piece_value[held_piece];
+        val = (state.w_to_move)? piece_value[held_piece]: -piece_value[held_piece];
+		ris+=val;
     }
 
     return ris;

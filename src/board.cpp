@@ -178,6 +178,7 @@ void board_init(void){
 	}
 	startingp = emptyp;
 	startingp.w_to_move=1;
+	startingp.lastmove.flag = NO_MOVE;
 
 	set_starting_pos(0);
 	set_starting_pos(1);

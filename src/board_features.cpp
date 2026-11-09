@@ -83,7 +83,7 @@ void handle_mouse(void){
 void handle_features(void){
 	handle_mouse();
 
-	target_eval_val = evaluate_pos(currentp);
+	if(settings[EVAL])target_eval_val = evaluate_pos(currentp);
 }
 
 
@@ -151,5 +151,5 @@ void draw_features(void){
 
 	}
 
-	eval_bar_draw();
+	if(settings[EVAL])eval_bar_draw();
 }

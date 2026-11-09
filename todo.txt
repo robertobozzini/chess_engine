@@ -1,9 +1,31 @@
+gen:
+    sistemo tutti gli header ecc per essere piu ordinati
+
 menu:
-    sistemo posizione e dimensione bottoni vari
+    rendo bottoni non inutili
 
 game:
     gestisco possibili mosse: lista? le calcolo al momento per ogni pezzo?
-    sistemo controllo di legalità (Scacchi ecc)
-    sistemo tutti gli header ecc per essere piu ordinati
+
+    sistemo controllo di legalità (Scacchi ecc):
+        devo fare funzioni per controllare se square è sotto attacco, da li faccio bitboard degli attacchi
+        e guardo dove puo andare il re, (dove non è attaccato)-> movimento re fatto
+        ma devo anche considerare i pin, o potersi mettere in mezzo tra attacco: da gestire
+        per mettersi in mezzo posso fare | degli attacchi togliendo al raggio che attraversa la posizione desiderata
+        per controllare che se rimuovo quel raggio allora il re non è sotto attacco
+        per i pin invece: se è pinnato non si puo muovere (funzione check pin che controlla che: se in 
+        2 direzioni opposte si trovano il re e un pezzo nemico che PUO andare in quella direzione (anche se pinnato)
+        allora quel pezzo è pinnato).
+        sembra sensato ma leggermente lento, il pin sembra abbastanza veloce (un po contorto ma veloce)
+        lo scacco però invece no -> la bitboard dei pezzi attaccati sembra lento, in quanto dovrei controllare
+        ogni pezzo nemico e cosa esso attacca. 
+        è una cosa utile anche per l'arrocco ma boh devo gestirlo in modo efficente, e rn non mi viene in mente
+        POTREI fare funzione che a ogni move calcola cosa cambia, e non ricalcola tutto
+        questo potrebbe essere utile e veloce (??) ma devo capire come implementarlo in modo utile
+        con questo posso anche guardare piu velocemente i pin (se rimuovendo viene attaccato il re)
+    
+
+    creo e implemento mappe di convenienza per i pezzi (per ora eval no depth)
+    
 
 

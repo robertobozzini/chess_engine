@@ -17,7 +17,11 @@ G1, G2, G3, G4, G5, G6, G7, G8,
 H1, H2, H3, H4, H5, H6, H7, H8,
 	NO_SQ };
 
-
+struct Move { 
+    int from, to; 
+    uint8_t piece, captured, promo, flag; 
+}; // captured/promo = EMPTY se assenti
+enum MoveFlag : uint8_t { NORMAL, DOUBLE_PUSH, EN_PASSANT, CASTLE, NO_MOVE };
 
 struct Position {
     uint64_t pieces[2][6];   //[color][type] -> in un solo numero mi salvo tutte le posizioni in cui un pezzo di un colore si trova: se il bit è 1 se ne trova 1
@@ -28,6 +32,7 @@ struct Position {
     //uint8_t castling; 
     //int8_t enpas_sq; //casa di en passant: -1 se nessuna
     //uint8_t halfmove; 
+	Move lastmove;
 };
 extern Position startingp;
 extern Position currentp;

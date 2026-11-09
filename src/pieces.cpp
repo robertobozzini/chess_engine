@@ -24,9 +24,12 @@ void load_pieces_textures(void){
 	texall[1][5] = LoadTexture("../images/wk.png");
 }
 
-uint64_t pawn_att[2][64], knight_att[64], king_att[64], ray[8][64]; //attack tables
+uint64_t pawn_mv[2][64], pawn_att[2][64], knight_att[64], king_att[64], ray[8][64]; //attack tables
 //{E, W, N, S, NE, NW, SE, SW}; 
-Vector2 directions[8]={{-1,0},{+1,0},{0,-1},{0,+1},{-1,-1},{+1,-1},{-1,+1},{+1,+1}};
+Vector2 directions[8]={{+1,0},{-1,0},{0,-1},{0,+1},{+1,-1},{-1,-1},{+1,+1},{-1,+1}};//to check
+static const int opp[8] = {1,0,3,2,7,6,5,4};//opp[E] = W
+
+uint64_t between[64][64], line[64][64];//between: squares within the line a-b, line: the whole line
 
 uint64_t poss_moves;
 
@@ -47,10 +50,16 @@ void att_tables_init(void){
 		auto [col,row] = sq_to_coord(sq);
 
 		//pawns
-		add_if_in(pawn_att[0][sq], col, row+1);
-		add_if_in(pawn_att[1][sq], col, row-1);
-		if(row == 1)add_if_in(pawn_att[0][sq], col, row+2);//2 square step if you are at a certain sqare with a certain color
-		else if (row == 6)add_if_in(pawn_att[1][sq], col, row-2);
+		add_if_in(pawn_mv[0][sq], col, row+1);
+		add_if_in(pawn_att[0][sq], col-1, row +1);
+		add_if_in(pawn_att[0][sq], col+1, row +1);
+
+		add_if_in(pawn_mv[1][sq], col, row-1);
+		add_if_in(pawn_att[1][sq], col-1, row -1);
+		add_if_in(pawn_att[1][sq], col+1, row -1);
+
+		if(row == 1)add_if_in(pawn_mv[0][sq], col, row+2);//2 square step if you are at a certain sqare with a certain color
+		else if (row == 6)add_if_in(pawn_mv[1][sq], col, row-2);
 
 		for(auto &dir:KN)//knight
 			add_if_in(knight_att[sq], col+dir[0], row + dir[1]);
@@ -70,6 +79,20 @@ void att_tables_init(void){
 			
 		}
 	}
+	for(int a=0;a<64;a++){
+		auto [ac,ar] = sq_to_coord(a);
+		for(int dir=E; dir<=SW; dir++){
+			uint64_t acc = 0;
+			Vector2 pos = Vector2Add((Vector2){ac,ar}, directions[dir]);
+			while(in_board(pos)){
+				int b = coord_to_sq(pos);
+				between[a][b] = acc;
+				line[a][b] = ray[dir][a] | ray[opp[dir]][a] | (1ULL<<a);
+				acc |= 1ULL<<b;
+				pos = Vector2Add(pos, directions[dir]);
+			}
+		}
+	}
 }
 uint64_t find_illegal(Position state){//for a certain position 
 	//probably will change -> checks if position is illegal? my checking if king is attacked? (old approach) -> probably not optimal 
@@ -82,42 +105,98 @@ uint64_t find_illegal(Position state){//for a certain position
 uint64_t ray_attacks(uint8_t dir, int sq, uint64_t occ){
 	uint64_t table = ray[dir][sq];
 	uint64_t blockers = table & occ;
+
+	if(!blockers) return table;
+
 	int bit;
 	bool increasesq = (dir == N || dir == E || dir == NE || dir == NW);
 	bit = (increasesq)? lsb(blockers) : msb(blockers);
 	return table & ~ray[dir][bit];
 }
 
-uint64_t find_moves(Position state, uint8_t piece, int sq){
-	uint64_t moves_table = 0UL;
+uint64_t bishop_attacks(const Position &state, int sq){
+	uint64_t table = 0UL;
+	for(uint8_t dir=NE;dir<=SW;dir++){
+		table |= ray_attacks(dir, sq, state.all);
+	}
+	return table;
+}
+
+uint64_t rook_attacks(const Position &state, int sq){
+	uint64_t table = 0UL;
+	for(uint8_t dir=E;dir<=S;dir++){
+		table |= ray_attacks(dir, sq, state.all);
+	}
+	return table;
+}
+
+uint64_t attackers(const Position &state, int sq, bool by, uint64_t occ){
+	    return (pawn_att[!by][sq] & state.pieces[by][PAWN])      // tabella del colore OPPOSTO
+         | (knight_att[sq] & state.pieces[by][KNIGHT]) | (king_att[sq] & state.pieces[by][KING])
+         | (bishop_attacks(state, sq) & (state.pieces[by][BISHOP]|state.pieces[by][QUEEN]))
+         | (rook_attacks(state, sq)   & (state.pieces[by][ROOK]  |state.pieces[by][QUEEN]));
+}
+
+uint64_t check_en_pas(const Position &state, int sq){//returns whether and where a pawn from square sq can enpassant in a certain position
+	uint64_t table = 0UL;
+	//probably not the best: i have to also check if this move is an en passant later on (or could just check a "Move" type element??)
+	if(state.lastmove.flag != EN_PASSANT) return 0UL;
+	//Move lastmove = state.lastmove;
+	Vector2 topos = sq_to_coord(state.lastmove.to);
+	Vector2 pawnpos = sq_to_coord(sq);
+
+	if(pawnpos.y == topos.y){
+		if(pawnpos.x +1 == topos.x){//if true pawnpos.x+1 is inside the board
+
+		}
+		else if(pawnpos.x -1 == topos.x){
+
+		}
+	}
+}
+
+uint64_t find_moves(const Position &state, uint8_t piece, int sq){
+	uint64_t moves_table = 0UL; //pseudo legal
 	bool turn = state.w_to_move;
 
 	switch(piece){
 		case PAWN:
-			moves_table = pawn_att[turn][sq]&~state.occ[turn];
+			moves_table =pawn_mv[turn][sq]&~state.all;//non deve essere occupato da nessuno
+			
+			Vector2 tmp = sq_to_coord(sq);//check per evitare che pedina salti pezzo in mezzo
+			float col,row;
+			col =tmp.x; row = tmp.y;
+			int nsq1, nsq2; 
+			row = (turn)? row-1:row+1;
+			nsq1 = coord_to_sq((Vector2){col,row});
+			row = (turn)? row-1:row+1;
+			nsq2 = coord_to_sq((Vector2){col,row});
+
+			if(is_occ(state.all, nsq1) && is_occ(moves_table, nsq2)){
+				//devo rimediare
+				moves_table &= ~(1UL<<nsq2);
+			}
+			moves_table |= pawn_att[turn][sq] & state.occ[!turn];
+			// + en passant
+			//moves_table |= check_en_pas(state, sq);
 			break;
 		case KNIGHT:
 			moves_table = knight_att[sq]&~state.occ[turn];
 			break;
 		case KING:
 			moves_table = king_att[sq]&~state.occ[turn];
+			//+ short && long castle
 			break;
 		case BISHOP:
-			for(uint8_t dir=NE;dir<=SW;dir++){
-				moves_table |= ray_attacks(dir, sq, state.all);
-			}
+			moves_table = bishop_attacks(state, sq);
 			moves_table &=~state.occ[turn];
 			break;
 		case ROOK:
-			for(uint8_t dir=E;dir<=S;dir++){
-				moves_table |=ray_attacks(dir, sq, state.all);
-			}
+			moves_table = rook_attacks(state, sq);
 			moves_table &=~state.occ[turn];
 			break;
 		case QUEEN:
-			for(uint8_t dir=E;dir<=SW;dir++){
-				moves_table |= ray_attacks(dir, sq, state.all); 
-			}
+			moves_table = bishop_attacks(state, sq) | rook_attacks(state, sq);
 			moves_table &=~state.occ[turn];
 			break;
 	}
