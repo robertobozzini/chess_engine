@@ -27,5 +27,6 @@ game:
 
     creo e implemento mappe di convenienza per i pezzi (per ora eval no depth)
     
-
+    sistemo lastmove: arrocco, en passant e altro
+    gestisco promozione
 

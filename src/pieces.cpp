@@ -131,10 +131,10 @@ uint64_t rook_attacks(const uint64_t& occ, int sq){
 }
 
 uint64_t attackers(const Position &state, int sq, bool by, uint64_t occ){
-	    return (pawn_att[!by][sq] & state.pieces[by][PAWN])      // tabella del colore OPPOSTO
-         | (knight_att[sq] & state.pieces[by][KNIGHT]) | (king_att[sq] & state.pieces[by][KING])
-         | (bishop_attacks(occ, sq) & (state.pieces[by][BISHOP]|state.pieces[by][QUEEN]))
-         | (rook_attacks(occ, sq)   & (state.pieces[by][ROOK]  |state.pieces[by][QUEEN]));
+	return (pawn_att[by][sq] & state.pieces[by][PAWN])      // tabella del colore OPPOSTO (?)
+		| (knight_att[sq] & state.pieces[by][KNIGHT]) | (king_att[sq] & state.pieces[by][KING])
+		| (bishop_attacks(occ, sq) & (state.pieces[by][BISHOP]|state.pieces[by][QUEEN]))
+		| (rook_attacks(occ, sq)   & (state.pieces[by][ROOK]  |state.pieces[by][QUEEN]));
 }
 
 uint64_t check_en_pas(const Position &state, int sq){//returns whether and where a pawn from square sq can enpassant in a certain position
@@ -229,6 +229,8 @@ void pieces_draw(bool turn){
 	for (int i=0;i<6;i++){//type of piece currently looking at
 		while(lastp.pieces[turn][i]){
 			int sq = pop_lsb(lastp.pieces[turn][i]);
+			
+			if(sq == held_piece_sq)continue;
 			//draw
 			Vector2 coords = sq_to_coord(sq);
 

@@ -22,7 +22,7 @@ void handle_mouse(void){
     if(!on_board(mouse_position)){
 
 		if(held_piece!=EMPTY){
-			set_board_piece(currentp, currentp.w_to_move, held_piece_sq, held_piece);
+			//set_board_piece(currentp, currentp.w_to_move, held_piece_sq, held_piece);
 			held_piece=EMPTY;
 			held_piece_sq = NO_SQ;
 		}
@@ -60,19 +60,21 @@ void handle_mouse(void){
 		held_piece_sq = sq;
 
 		//tolgo pezzo dalla board
-		clear_board_piece(currentp, currentp.w_to_move, sq, held_piece);
+		//clear_board_piece(currentp, currentp.w_to_move, sq, held_piece);
     }
     else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && held_piece != EMPTY){
+
+		//clear_board_piece(currentp, currentp.w_to_move, held_piece_sq, held_piece); DEVO INSERIRLO DA QUALCHE PARTE: DOVE?
+
 		u_int64_t legal_moves = find_moves(currentp, held_piece, held_piece_sq);
 		bool legal_move = is_occ(legal_moves, sq);
 		
 		if(legal_move){//moves
+			clear_board_piece(currentp, currentp.w_to_move, held_piece_sq, held_piece);
 			set_board_piece(currentp, currentp.w_to_move, sq, held_piece);
 			change_turn();
 		}
-		else{//return to original spot
-			set_board_piece(currentp, currentp.w_to_move, held_piece_sq, held_piece);
-		}
+
         held_piece=EMPTY;
 		held_piece_sq = NO_SQ;
     }
