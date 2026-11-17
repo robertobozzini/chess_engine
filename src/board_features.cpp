@@ -47,7 +47,8 @@ void handle_mouse(void){
     else if(IsMouseButtonReleased(MOUSE_BUTTON_RIGHT) && st_arrow_pos.x !=-1){
         if(st_arrow_pos != board_pos)
             arrows.push_back({st_arrow_pos,board_pos});
-        
+        else 
+			arrows.clear();
         st_arrow_pos=(Vector2){-1,-1};
     }
 
@@ -60,13 +61,10 @@ void handle_mouse(void){
 		held_piece_sq = sq;
 
 		//tolgo pezzo dalla board
-		//clear_board_piece(currentp, currentp.w_to_move, sq, held_piece);
     }
     else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && held_piece != EMPTY){
 
-		//clear_board_piece(currentp, currentp.w_to_move, held_piece_sq, held_piece); DEVO INSERIRLO DA QUALCHE PARTE: DOVE?
-
-		u_int64_t legal_moves = find_moves(currentp, held_piece, held_piece_sq);
+		u_int64_t legal_moves = find_moves(currentp, current_legality, held_piece, held_piece_sq);
 		bool legal_move = is_occ(legal_moves, sq);
 		
 		if(legal_move){//moves
@@ -149,7 +147,7 @@ void draw_features(void){
 		pos.y-=texall[currentp.w_to_move][held_piece].height/2.0f*scalepiece;
 		draw_piece(currentp.w_to_move,held_piece, pos);
 
-		draw_attack_table(find_moves(currentp, held_piece, held_piece_sq));
+		draw_attack_table(find_moves(currentp, current_legality, held_piece, held_piece_sq));
 
 	}
 

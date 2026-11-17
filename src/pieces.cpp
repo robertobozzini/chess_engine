@@ -94,13 +94,6 @@ void att_tables_init(void){
 		}
 	}
 }
-uint64_t find_illegal(Position state){//for a certain position 
-	//probably will change -> checks if position is illegal? my checking if king is attacked? (old approach) -> probably not optimal 
-	//mmmmm
-	uint64_t illegal_moves = 0ULL;
-
-	return illegal_moves;
-}
 
 uint64_t ray_attacks(uint8_t dir, int sq, const uint64_t &occ){
 	uint64_t table = ray[dir][sq];
@@ -130,13 +123,13 @@ uint64_t rook_attacks(const uint64_t& occ, int sq){
 	return table;
 }
 
-uint64_t attackers(const Position &state, int sq, bool by, uint64_t occ){
-	return (pawn_att[by][sq] & state.pieces[by][PAWN])      // tabella del colore OPPOSTO (?)
+uint64_t attackers(const Position &state, int sq, bool by, uint64_t occ){//occ è per occupazioni ipotetiche
+	return (pawn_att[!by][sq] & state.pieces[by][PAWN])      // tabella del colore OPPOSTO
 		| (knight_att[sq] & state.pieces[by][KNIGHT]) | (king_att[sq] & state.pieces[by][KING])
 		| (bishop_attacks(occ, sq) & (state.pieces[by][BISHOP]|state.pieces[by][QUEEN]))
 		| (rook_attacks(occ, sq)   & (state.pieces[by][ROOK]  |state.pieces[by][QUEEN]));
 }
-
+/*per ora inutile
 uint64_t check_en_pas(const Position &state, int sq){//returns whether and where a pawn from square sq can enpassant in a certain position
 	uint64_t table = 0ULL;
 	//probably not the best: i have to also check if this move is an en passant later on (or could just check a "Move" type element??)
@@ -155,10 +148,40 @@ uint64_t check_en_pas(const Position &state, int sq){//returns whether and where
 	}
 	return table;
 }
+*/
+Legality current_legality;
 
-uint64_t find_moves(const Position &state, uint8_t piece, int sq){
+Legality legality(const Position &state){
+	bool turn = state.w_to_move;
+	Legality ris;
+	ris.ksq = lsb(state.pieces[turn][KING]);
+	ris.checkers = attackers(state, ris.ksq, !turn, state.all);
+
+	uint64_t snipers = (rook_attacks(0ULL, ris.ksq) & (state.pieces[!turn][ROOK]|state.pieces[!turn][QUEEN])
+						| bishop_attacks(0ULL, ris.ksq) & (state.pieces[!turn][BISHOP]|state.pieces[!turn][QUEEN]));
+
+	ris.pinned = 0ULL;
+	while(snipers){
+		int sq = pop_lsb(snipers);
+		uint64_t blockers = between[ris.ksq][sq] & state.all;
+		if(blockers && !(blockers & (blockers-1)) && (blockers & state.occ[turn])){
+			//verifico che ce ne siano, verifico che sia unico, verifico che sia mio
+			ris.pinned |= blockers;
+		}
+	}
+	int n = __builtin_popcountll(ris.checkers);
+	ris.check_mask = (n==0) ? ~0ULL //no checkers
+	             : (n==1) ? (ris.checkers | between[ris.ksq][lsb(ris.checkers)]) //1 checker: can block
+	             : 0ULL; //multiple checks: have to move
+	return ris;
+}
+
+
+uint64_t find_moves(const Position &state, const Legality &L, uint8_t piece, int sq){
 	uint64_t moves_table = 0ULL; //pseudo legal
 	bool turn = state.w_to_move;
+
+	
 
 	switch(piece){
 		case PAWN:{
@@ -185,10 +208,20 @@ uint64_t find_moves(const Position &state, uint8_t piece, int sq){
 		case KNIGHT:
 			moves_table = knight_att[sq]&~state.occ[turn];
 			break;
-		case KING:
+		case KING:{
 			moves_table = king_att[sq]&~state.occ[turn];
 			//+ short && long castle
+			//short castle
+			//long castle
+
+			uint64_t occ_nk = state.all & ~(1ULL<<sq), t = moves_table;//illegalità per il re
+			while(t){//max 8
+				int to = pop_lsb(t);
+				if(attackers(state, to, !turn, occ_nk)) moves_table &= ~(1ULL<<to);
+			}
+
 			break;
+		}
 		case BISHOP:
 			moves_table = bishop_attacks(state.all, sq);
 			moves_table &=~state.occ[turn];
@@ -202,12 +235,18 @@ uint64_t find_moves(const Position &state, uint8_t piece, int sq){
 			moves_table &=~state.occ[turn];
 			break;
 	}
-	//gotta filter out illegal moves
-	/*
-	i could check IF the piece can move (on same diagonal with king?)
-	*/
 
-	//moves_table = moves_table & ~find_illegal(state);//ITS NOT ACTUALLY LIKE THIS
+	//legality check
+
+	if(piece != KING){
+		if(is_occ(L.pinned, sq)){
+			moves_table = moves_table & (line[L.ksq][sq]);//linea del pin
+		}//piece is pinned-> can move only in the diagonal (or line) of the pin
+		moves_table = moves_table & L.check_mask;
+	}
+
+	
+	//moves_table =  moves_table 
 	return moves_table;
 }
 
@@ -225,6 +264,7 @@ void draw_piece(bool turn, uint8_t piece, Vector2 pos){
 }
 
 void pieces_draw(bool turn){
+	//current_legality
 	Position lastp = currentp;
 	for (int i=0;i<6;i++){//type of piece currently looking at
 		while(lastp.pieces[turn][i]){
@@ -246,5 +286,15 @@ void pieces_draw(bool turn){
 			pos.y = corner.y + squaresize*row + (float)squaresize/2.0f - texall[turn][i].height*scalepiece/2.0f;
 			draw_piece(turn,i,pos);
 		}
+	}
+
+	if(current_legality.checkers != 0ULL){//RED RING IF KING IS IN CHECK
+		int sq = current_legality.ksq;
+		auto [col,row] = sq_to_coord(sq);
+		Vector2 center;
+		center.x = corner.x + squaresize*col + squaresize/2.0f;
+		center.y = corner.y + squaresize*row + squaresize/2.0f;
+
+		DrawRing(center, squaresize*0.38f, squaresize*0.45f, 0, 360, 36, Fade(MAROON, 0.6f));
 	}
 }

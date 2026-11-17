@@ -27,11 +27,7 @@ float evaluate_pos(Position state){
 
 			ris+=val;
         }
-    }
-    if(held_piece != EMPTY){
-        val = (state.w_to_move)? piece_value[held_piece]: -piece_value[held_piece];
-		ris+=val;
-    }
+	}
 
     return ris;
 }

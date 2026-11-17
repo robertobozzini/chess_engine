@@ -97,6 +97,8 @@ void board_reset(void){
 	held_piece = EMPTY;
 	held_piece_sq = NO_SQ;
 	arrows.clear();
+
+	current_legality = legality(currentp);
 }
 
 
@@ -194,6 +196,8 @@ void change_turn(void){
 	currentp.w_to_move = !currentp.w_to_move;
 	record.push_back(currentp);
 	arrows.clear();
+
+	current_legality = legality(currentp);//aggiorno la legalità
 }
 
 void board_draw(void){
