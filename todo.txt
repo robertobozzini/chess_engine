@@ -8,7 +8,7 @@ game:
 
     controllo di aver sistemato inizalizzazioni, dichiarazioni ecc
 
-    gestisco promozione
+    metto suoni
 
     creo e implemento mappe di convenienza per i pezzi (per ora eval no depth)
     

@@ -33,6 +33,7 @@ struct Position {
     //int8_t enpas_sq; //casa di en passant: -1 se nessuna
     //uint8_t halfmove; 
 	Move lastmove;
+	bool choosing;
 };
 extern Position startingp;
 extern Position currentp;
@@ -44,7 +45,7 @@ extern std::vector<Position>record;
 
 extern Vector2 corner;
 extern int squaresize, chessboardsize;
-
+extern Move mv;
 
 //BIT OPERATIONS ON BOARD
 inline int lsb(uint64_t bb) { 
@@ -84,8 +85,7 @@ enum CastleRight : uint8_t { WK = 1, WQ = 2, BK = 4, BQ = 8 };
 void board_reset(void);
 void board_init(void);
 
-extern uint8_t promo_to;
-Move build_move(const Position &s, int from, int to);
+Move build_move(Position &s, int from, int to);
 void apply_move(Position &p, const Move &m);
 
 void change_turn(const Move &m);

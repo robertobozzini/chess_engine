@@ -258,7 +258,7 @@ uint64_t find_moves(const Position &state, const Legality &L, uint8_t piece, int
 			uint64_t occ_after = (state.all & ~(1ULL<<sq) & ~(1ULL<<capsq)) | (1ULL<<epsq); //try board
 
 			uint64_t king_attackers = attackers(state, L.ksq, !turn, occ_after) & ~(1ULL<<capsq); //check if legal manually
-			if(king_attackers == 0) moves_table |= 1ULL<<epsq;
+			if(king_attackers == 0) moves_table |= 1ULL<<epsq; //legal
 		}
 	}
 
@@ -307,10 +307,14 @@ void pieces_draw(bool turn){
 
 	if(current_legality.checkers != 0ULL){//RED RING IF KING IS IN CHECK
 		int sq = current_legality.ksq;
-		auto [col,row] = sq_to_coord(sq);
+		Vector2 pos = sq_to_coord(sq);
+
+		if(!settings[TURN])
+			pos = invert_coord(pos);
+
 		Vector2 center;
-		center.x = corner.x + squaresize*col + squaresize/2.0f;
-		center.y = corner.y + squaresize*row + squaresize/2.0f;
+		center.x = corner.x + squaresize*pos.x + squaresize/2.0f;
+		center.y = corner.y + squaresize*pos.y + squaresize/2.0f;
 
 		DrawRing(center, squaresize*0.38f, squaresize*0.45f, 0, 360, 36, Fade(MAROON, 0.6f));
 	}

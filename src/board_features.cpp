@@ -15,8 +15,6 @@ Vector2 st_arrow_pos = (Vector2){-1,-1};
 vector<pair<Vector2,Vector2>>arrows;
 float scale_arrow_width = 0.15f;
 
-
-
 void handle_mouse(void){
     Vector2 mouse_position = GetMousePosition();
     if(!on_board(mouse_position)){
@@ -34,9 +32,34 @@ void handle_mouse(void){
 
     Vector2 board_pos = chessboard_pos(mouse_position);
 
+
+
 	if(!settings[TURN])//giochi come il nero:devi invertire
 		board_pos=invert_coord(board_pos);
-	
+	int sq = coord_to_sq(board_pos);
+
+
+	if(currentp.choosing){
+		//gestisco
+		int promosq = mv.to;//square di dove si trova: da qua shifto verso alto o basso
+		bool turn = currentp.w_to_move;
+
+		int shift_constant = (turn)? -8:8;
+
+		if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+			for(uint8_t p=KNIGHT; p<=QUEEN; p++){
+				if(sq == (promosq + (p-1)*shift_constant)){
+					//im on that square
+					mv.promo = p;
+					//currentp.choosing = 0;
+					change_turn(mv);
+					break;
+				}
+			}
+		} 
+
+		return;
+	}
 
 	//arrows
     if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
@@ -52,7 +75,6 @@ void handle_mouse(void){
     }
 
 
-    int sq = coord_to_sq(board_pos);
 	//cout<<"ti trovi in "<<board_pos.x<<" "<<board_pos.y<<" al quadrato n "<<sq<<endl;
     //handle del pezzo in mano
     if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && is_occ(currentp.occ[currentp.w_to_move], sq)){//sicuramente non avevo pezzi in mano
@@ -67,13 +89,12 @@ void handle_mouse(void){
 		bool legal_move = is_occ(legal_moves, sq);
 		
 		if(legal_move){//moves
-			//da togliere: genero mossa e la do a change_turn
-			Move mv = build_move(currentp, held_piece_sq, sq);
-			bool promotion = held_piece == PAWN && (sq / 8 == 0 || sq / 8 == 7); //row 0 or 7
-			if(promotion){
-				promo_to = QUEEN;
+
+			mv = build_move(currentp, held_piece_sq, sq);
+
+			if(!currentp.choosing){
+				change_turn(mv);
 			}
-			change_turn(mv);
 		}
 
         held_piece=EMPTY;
@@ -121,10 +142,14 @@ void drawArrow(Vector2 start, Vector2 end){
 void draw_attack_table(uint64_t table){
 	while(table){
 		int sq = pop_lsb(table);
-		auto [col,row] = sq_to_coord(sq);
+		Vector2 pos = sq_to_coord(sq);
+
+		if(!settings[TURN])
+			pos = invert_coord(pos);
+
 		Vector2 center;
-		center.x = corner.x + squaresize*col + squaresize/2.0f;
-		center.y = corner.y + squaresize*row + squaresize/2.0f;
+		center.x = corner.x + squaresize*pos.x + squaresize/2.0f;
+		center.y = corner.y + squaresize*pos.y + squaresize/2.0f;
 
 		if(is_occ(currentp.all, sq)){
 			DrawRing(center, squaresize*0.38f, squaresize*0.45f, 0, 360, 36, Fade(BROWN, 0.6f));

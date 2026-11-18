@@ -89,9 +89,6 @@ Position startingp;
 Position currentp;
 Position emptyp;
 
-uint8_t promo_to;
-
-
 void set_starting_pos(bool color){
 	//devo fare cosa simmetrica rispetto alla riga in messo: row = 0 = 7-> media e 3.5
 	//0 -> 7
@@ -163,7 +160,6 @@ void board_reset(void){
 
 	current_legality = legality(currentp);
 
-	promo_to = EMPTY;
 }
 
 void board_init(void){
@@ -190,11 +186,14 @@ void board_init(void){
 	//fai or per trovare all
 	startingp.all = startingp.occ[0] | startingp.occ[1];
 	startingp.castling=15;
+	startingp.choosing = 0;
 
 	board_reset();
 }
 
-Move build_move(const Position &s, int from, int to){
+Move mv;
+
+Move build_move(Position &s, int from, int to){
 	uint8_t piece = s.type_on[from], captured = s.type_on[to], promo = EMPTY, flag = NORMAL;
 
 	bool double_push = piece == PAWN && abs(to - from) == 16;
@@ -205,7 +204,10 @@ Move build_move(const Position &s, int from, int to){
 	if(double_push) flag = DOUBLE_PUSH;
 	else if(diag_to_empty){ flag = EN_PASSANT; captured = PAWN; }
 	else if(castle) flag = CASTLE;
-	if(promotion) promo = promo_to;   // shortcut: sempre donna, scelta del pezzo quando fai la UI
+
+	if(promotion){
+		s.choosing = 1;
+	}
 	return Move{from, to, piece, captured, promo, flag};
 }
 
@@ -235,7 +237,9 @@ void apply_move(Position &state, const Move &mv){
 		clear_board_piece(state, turn, kingside ? mv.from+3 : mv.from-4, ROOK);
 		set_board_piece(state, turn, kingside ? mv.from+1 : mv.from-1, ROOK);
 	}
-
+	if(mv.promo != EMPTY){
+		state.choosing = 0;
+	}
 	state.castling &= rights_kept(mv.from) & rights_kept(mv.to); //mask per modificare movimento di re e rooks:
 	//6 totali: 2 torri e 1 re per colore
 	state.lastmove = mv;
@@ -247,7 +251,6 @@ void change_turn(const Move &new_move){
 	apply_move(currentp, new_move);
 	record.push_back(currentp);
 	arrows.clear();
-	promo_to = EMPTY;
 
 	current_legality = legality(currentp);//aggiorno la legalità
 }
@@ -277,5 +280,33 @@ void board_draw(void){
 	pieces_draw(0);
 	pieces_draw(1);
 	
+	if(currentp.choosing){
+		//roba
+		int promosq = mv.to;//square di dove si trova: da qua shifto verso alto o basso
+		bool turn = currentp.w_to_move;
+
+		int shift_constant = (turn)? -8:8;
+
+		int sq;
+		for(uint8_t p=KNIGHT; p<=QUEEN; p++){
+			sq = (promosq + (p-1)*shift_constant);
+
+
+			Vector2 pos = sq_to_coord(sq);
+
+			if(!settings[TURN])
+				pos = invert_coord(pos);
+
+			int top=corner.y+pos.y*squaresize;
+			int left=corner.x+pos.x*squaresize;
+			DrawRectangle(left, top, squaresize, squaresize, (turn)?WHITE:BLACK);
+
+			pos.x = left + (float)squaresize/2.0f - texall[turn][p].width*scalepiece/2.0f;
+			pos.y = top + (float)squaresize/2.0f - texall[turn][p].height*scalepiece/2.0f;
+			draw_piece(turn, p, pos);
+		}
+
+	}
+
 	draw_features();
 }
