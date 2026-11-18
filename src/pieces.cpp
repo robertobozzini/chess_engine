@@ -129,26 +129,7 @@ uint64_t attackers(const Position &state, int sq, bool by, uint64_t occ){//occ �
 		| (bishop_attacks(occ, sq) & (state.pieces[by][BISHOP]|state.pieces[by][QUEEN]))
 		| (rook_attacks(occ, sq)   & (state.pieces[by][ROOK]  |state.pieces[by][QUEEN]));
 }
-/*per ora inutile
-uint64_t check_en_pas(const Position &state, int sq){//returns whether and where a pawn from square sq can enpassant in a certain position
-	uint64_t table = 0ULL;
-	//probably not the best: i have to also check if this move is an en passant later on (or could just check a "Move" type element??)
-	if(state.lastmove.flag != EN_PASSANT) return 0ULL;
-	//Move lastmove = state.lastmove;
-	Vector2 topos = sq_to_coord(state.lastmove.to);
-	Vector2 pawnpos = sq_to_coord(sq);
 
-	if(pawnpos.y == topos.y){
-		if(pawnpos.x +1 == topos.x){//if true pawnpos.x+1 is inside the board
-
-		}
-		else if(pawnpos.x -1 == topos.x){
-
-		}
-	}
-	return table;
-}
-*/
 Legality current_legality;
 
 Legality legality(const Position &state){
@@ -176,6 +157,12 @@ Legality legality(const Position &state){
 	return ris;
 }
 
+static bool none_attacked(const Position &state, uint64_t squares, bool by){
+	while(squares){
+		if(attackers(state, pop_lsb(squares), by, state.all)) return false;
+	}
+	return true;
+}
 
 uint64_t find_moves(const Position &state, const Legality &L, uint8_t piece, int sq){
 	uint64_t moves_table = 0ULL; //pseudo legal
@@ -201,8 +188,8 @@ uint64_t find_moves(const Position &state, const Legality &L, uint8_t piece, int
 				moves_table &= ~(1ULL<<nsq2);
 			}
 			moves_table |= pawn_att[turn][sq] & state.occ[!turn];
-			// + en passant
-			//moves_table |= check_en_pas(state, sq);
+			// + en passant ->later to not get any masks
+			
 			break;
 		}
 		case KNIGHT:
@@ -211,10 +198,29 @@ uint64_t find_moves(const Position &state, const Legality &L, uint8_t piece, int
 		case KING:{
 			moves_table = king_att[sq]&~state.occ[turn];
 			//+ short && long castle
-			//short castle
-			//long castle
+			//devo guardare che non si sia mai mosso
+			//Castle
+			int firstcol = (turn)?A1:H1; //prima traversa
 
-			uint64_t occ_nk = state.all & ~(1ULL<<sq), t = moves_table;//illegalità per il re
+			if(!L.checkers){//non è sotto attacco
+				uint8_t short_right = turn ? WK : BK;
+				uint8_t long_right  = turn ? WQ : BQ;
+
+				uint64_t short_empty = (1ULL<<(firstcol+5)) | (1ULL<<(firstcol+6));
+				uint64_t short_cross = short_empty;
+				uint64_t long_empty  = (1ULL<<(firstcol+1)) | (1ULL<<(firstcol+2)) | (1ULL<<(firstcol+3));
+				uint64_t long_cross  = (1ULL<<(firstcol+2)) | (1ULL<<(firstcol+3));
+
+				bool can_short = (state.castling & short_right) && !(state.all & short_empty) && none_attacked(state, short_cross, !turn);
+				bool can_long  = (state.castling & long_right) && !(state.all & long_empty) && none_attacked(state, long_cross, !turn);
+
+				if(can_short) moves_table |= 1ULL<<(firstcol+6);//short castle
+				if(can_long) moves_table |= 1ULL<<(firstcol+2);//long castle
+			}
+			
+			//legality check
+			uint64_t occ_nk = state.all & ~(1ULL<<sq);//occupied not by my king
+			uint64_t t = moves_table;//illegalità per il re
 			while(t){//max 8
 				int to = pop_lsb(t);
 				if(attackers(state, to, !turn, occ_nk)) moves_table &= ~(1ULL<<to);
@@ -243,6 +249,17 @@ uint64_t find_moves(const Position &state, const Legality &L, uint8_t piece, int
 			moves_table = moves_table & (line[L.ksq][sq]);//linea del pin
 		}//piece is pinned-> can move only in the diagonal (or line) of the pin
 		moves_table = moves_table & L.check_mask;
+	}
+	if(piece == PAWN && state.lastmove.flag == DOUBLE_PUSH){//en passant: checks legality in it for itself
+		int epsq  = (state.lastmove.from + state.lastmove.to) / 2; //"arrival" square: behind captured pawn	
+		int capsq = state.lastmove.to;//captured pawn
+		bool adjacent = pawn_att[turn][sq] & (1ULL<<epsq); //if i can attack the arrival square that means im to its side
+		if(adjacent){
+			uint64_t occ_after = (state.all & ~(1ULL<<sq) & ~(1ULL<<capsq)) | (1ULL<<epsq); //try board
+
+			uint64_t king_attackers = attackers(state, L.ksq, !turn, occ_after) & ~(1ULL<<capsq); //check if legal manually
+			if(king_attackers == 0) moves_table |= 1ULL<<epsq;
+		}
 	}
 
 	

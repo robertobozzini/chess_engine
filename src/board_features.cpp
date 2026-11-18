@@ -22,7 +22,6 @@ void handle_mouse(void){
     if(!on_board(mouse_position)){
 
 		if(held_piece!=EMPTY){
-			//set_board_piece(currentp, currentp.w_to_move, held_piece_sq, held_piece);
 			held_piece=EMPTY;
 			held_piece_sq = NO_SQ;
 		}
@@ -68,9 +67,13 @@ void handle_mouse(void){
 		bool legal_move = is_occ(legal_moves, sq);
 		
 		if(legal_move){//moves
-			clear_board_piece(currentp, currentp.w_to_move, held_piece_sq, held_piece);
-			set_board_piece(currentp, currentp.w_to_move, sq, held_piece);
-			change_turn();
+			//da togliere: genero mossa e la do a change_turn
+			Move mv = build_move(currentp, held_piece_sq, sq);
+			bool promotion = held_piece == PAWN && (sq / 8 == 0 || sq / 8 == 7); //row 0 or 7
+			if(promotion){
+				promo_to = QUEEN;
+			}
+			change_turn(mv);
 		}
 
         held_piece=EMPTY;

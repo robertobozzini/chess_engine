@@ -5,13 +5,10 @@ menu:
     rendo bottoni non inutili
 
 game:
-    finisco mosse possibili: come voglio gestire en passant e arrocco?
 
-    sistemo held_piece ovunque: ora resta sulla board
+    controllo di aver sistemato inizalizzazioni, dichiarazioni ecc
 
-    finisco controllo di legalità:
-        en passant e altro
-    
+    gestisco promozione
 
     creo e implemento mappe di convenienza per i pezzi (per ora eval no depth)
     

@@ -29,7 +29,7 @@ struct Position {
     uint64_t all; //or di occ[0] e occ[1]
     uint8_t  type_on[64]; 
     bool w_to_move; //white to move?
-    //uint8_t castling; 
+    uint8_t castling; 
     //int8_t enpas_sq; //casa di en passant: -1 se nessuna
     //uint8_t halfmove; 
 	Move lastmove;
@@ -79,10 +79,16 @@ Vector2 sq_to_coord(int sq);
 
 Vector2 chessboard_pos(Vector2 abs_pos);
 
+enum CastleRight : uint8_t { WK = 1, WQ = 2, BK = 4, BQ = 8 };
+
 void board_reset(void);
 void board_init(void);
 
-void change_turn(void);
+extern uint8_t promo_to;
+Move build_move(const Position &s, int from, int to);
+void apply_move(Position &p, const Move &m);
+
+void change_turn(const Move &m);
 
 void board_draw(void);
 
