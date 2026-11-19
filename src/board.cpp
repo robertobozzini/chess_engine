@@ -211,15 +211,15 @@ Move build_move(const Position &s, int from, int to){
 	bool double_push = piece == PAWN && abs(to - from) == 16;
 	bool diag_to_empty = piece == PAWN && from % 8 != to % 8 && captured == EMPTY;
 	bool castle = piece == KING && abs(to - from) == 2;
-	bool promotion = piece == PAWN && (to / 8 == 0 || to / 8 == 7);
+	//bool promotion = piece == PAWN && (to / 8 == 0 || to / 8 == 7);
 
 	if(double_push) flag = DOUBLE_PUSH;
 	else if(diag_to_empty){ flag = EN_PASSANT; captured = PAWN; }
 	else if(castle) flag = CASTLE;
 
-	if(promotion){
-		choosing = 1;
-	}
+	// if(promotion){
+	// 	choosing = 1;
+	// }
 	return Move{from, to, piece, captured, promo, flag};
 }
 
@@ -249,9 +249,9 @@ void apply_move(Position &state, const Move &mv){
 		clear_board_piece(state, turn, kingside ? mv.from+3 : mv.from-4, ROOK);
 		set_board_piece(state, turn, kingside ? mv.from+1 : mv.from-1, ROOK);
 	}
-	if(mv.promo != EMPTY){
-		choosing = 0;
-	}
+	// if(mv.promo != EMPTY){
+	// 	choosing = 0;
+	// }
 	state.castling &= rights_kept(mv.from) & rights_kept(mv.to); //mask per modificare movimento di re e rooks:
 	//6 totali: 2 torri e 1 re per colore
 	state.lastmove = mv;
@@ -283,6 +283,18 @@ void change_turn_bot(const Move &new_move, const std::vector<Move>&moves){//from
 }
 
 float transparency = 0.2f;
+
+void draw_text(Vector2 position, string text, int fontsize){
+	Vector2 padding = {chessboardsize/6.0f, chessboardsize/16.0f};
+	Vector2 text_size = MeasureTextEx(uiFont, text.c_str(), fontsize, 0);
+    Vector2 text_position = {position.x - text_size.x/2, position.y - text_size.y/2};
+	padding = Vector2Add(padding, text_size);
+	DrawRectangle(position.x - padding.x/2.0f , position.y - padding.y/2.0f, padding.x, padding.y, Fade(BEIGE, 0.9f));
+
+    //Color text_draw_color = ColorBrightness(textcolor, brightness_factor);
+    DrawTextEx(uiFont, text.c_str(), text_position, fontsize, 0, BLACK);
+}
+
 
 void board_draw(void){
 
@@ -372,6 +384,19 @@ void board_draw(void){
 
 		//disegno scritta di endgame
 		//endgame_button.text
+		string text;
+		if(end_game == CHECKMATE){
+			text = (currentp.w_to_move)? "BLACK WINS" : "WHITE WINS";
+		}
+		else{
+			text =  "TIE";
+		}
+
+		Vector2 position = (Vector2){corner.x + chessboardsize/2.0f, corner.y + chessboardsize/2.0f};
+		
+		int f_size = 90;
+		draw_text(position, text, f_size);
+
 
 	}
 }

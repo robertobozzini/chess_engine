@@ -47,9 +47,10 @@ int check_endgame(const Legality& L, const std::vector<Move>& moves){
 
 	//manca patta per ripetizione
 	if(moves.empty()){
-		if(L.checkers != 0)//stalemate
+		int n = __builtin_popcountll(L.checkers);
+		if(n!=0)//stalemate
 			return TIE;
-		else if(L.checkers != 0)
+		else if(n==0)
 			return CHECKMATE;
 	}
 

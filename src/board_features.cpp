@@ -19,22 +19,23 @@ Button lobby_button;
 
 void game_buttons_init(void){
 
-	fontsize = 30;
+	fontsize = 25;
     uiFont = LoadFontEx("../Fonts/Inter/static/Inter_28pt-ExtraBold.ttf", fontsize, NULL, 0);
 
 	Vector2 button_size;
-	button_size.x = ScreenWidth/8.0f;
-    button_size.y = ScreenHeight/10.0f;
+	button_size.x = ScreenWidth/6.0f;
+    button_size.y = ScreenHeight/16.0f;
 
 	Vector2 button_pos;
     button_pos.x = ScreenWidth*1.0f/6.0f - button_size.x/2.0f;
-    button_pos.y = ScreenHeight*3.0f/5.0f;
+    button_pos.y = ScreenHeight*2.0f/5.0f;
 
-	lobby_button.init(button_pos, button_size, "return to lobby", fontsize, uiFont, nullptr);
+	restart_button.init(button_pos, button_size, "new game", fontsize, uiFont, board_reset);
 	
 	button_pos.y += 2*button_size.y;
 	//newpos
-	restart_button.init(button_pos, button_size, "new game", fontsize, uiFont, board_reset);
+	
+	lobby_button.init(button_pos, button_size, "return to lobby", fontsize, uiFont, nullptr);
 
 	
 }
@@ -84,6 +85,7 @@ void handle_mouse(void){
 					//im on that square
 					mv.promo = p;
 					//currentp.choosing = 0;
+					choosing = 0;
 					change_turn(mv);
 					break;
 				}
@@ -124,9 +126,10 @@ void handle_mouse(void){
 
 			mv = build_move(currentp, held_piece_sq, sq);
 
-			if(!choosing){
+			if(mv.piece == PAWN && (sq/8 == 0 || sq/8 == 7))
+				choosing = 1;  
+			else 
 				change_turn(mv);
-			}
 		}
 
         held_piece=EMPTY;
