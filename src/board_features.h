@@ -9,6 +9,9 @@ extern uint8_t held_piece;
 extern int held_piece_sq;
 extern std::vector<std::pair<Vector2,Vector2>>arrows;
 
+extern Font board_font;
+extern Font text_font;
+
 extern Button restart_button;
 extern Button lobby_button;
 void game_buttons_init(void);

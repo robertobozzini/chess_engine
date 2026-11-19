@@ -285,14 +285,16 @@ void change_turn_bot(const Move &new_move, const std::vector<Move>&moves){//from
 float transparency = 0.2f;
 
 void draw_text(Vector2 position, string text, int fontsize){
+	
+
 	Vector2 padding = {chessboardsize/6.0f, chessboardsize/16.0f};
-	Vector2 text_size = MeasureTextEx(uiFont, text.c_str(), fontsize, 0);
+	Vector2 text_size = MeasureTextEx(text_font, text.c_str(), fontsize, 0);
     Vector2 text_position = {position.x - text_size.x/2, position.y - text_size.y/2};
 	padding = Vector2Add(padding, text_size);
 	DrawRectangle(position.x - padding.x/2.0f , position.y - padding.y/2.0f, padding.x, padding.y, Fade(BEIGE, 0.9f));
 
     //Color text_draw_color = ColorBrightness(textcolor, brightness_factor);
-    DrawTextEx(uiFont, text.c_str(), text_position, fontsize, 0, BLACK);
+    DrawTextEx(text_font, text.c_str(), text_position, fontsize, 0, BLACK);
 }
 
 

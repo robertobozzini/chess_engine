@@ -5,12 +5,6 @@ menu:
     rendo bottoni non inutili
 
 game:
-    SISTEMARE PROMOTION
-
-    fare bottone di torna alla lobby
-
-    fare fine partita: schermata e patta per ripetizione
-
     ricontrollo: polish e altro
 
     metto suoni

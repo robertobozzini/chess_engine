@@ -16,11 +16,14 @@ float scale_arrow_width = 0.15f;
 
 Button restart_button;
 Button lobby_button;
+Font board_font;
+Font text_font;
 
 void game_buttons_init(void){
 
 	fontsize = 25;
-    uiFont = LoadFontEx("../Fonts/Inter/static/Inter_28pt-ExtraBold.ttf", fontsize, NULL, 0);
+    board_font = LoadFontEx("../Fonts/Inter/static/Inter_28pt-ExtraBold.ttf", fontsize, NULL, 0);
+	text_font = LoadFontEx("../Fonts/Inter/static/Inter_28pt-ExtraBold.ttf", 90, NULL, 0);
 
 	Vector2 button_size;
 	button_size.x = ScreenWidth/6.0f;
@@ -30,12 +33,12 @@ void game_buttons_init(void){
     button_pos.x = ScreenWidth*1.0f/6.0f - button_size.x/2.0f;
     button_pos.y = ScreenHeight*2.0f/5.0f;
 
-	restart_button.init(button_pos, button_size, "new game", fontsize, uiFont, board_reset);
+	restart_button.init(button_pos, button_size, "new game", fontsize, board_font, board_reset);
 	
 	button_pos.y += 2*button_size.y;
 	//newpos
 	
-	lobby_button.init(button_pos, button_size, "return to lobby", fontsize, uiFont, nullptr);
+	lobby_button.init(button_pos, button_size, "return to lobby", fontsize, board_font, nullptr);
 
 	
 }
