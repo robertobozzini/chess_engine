@@ -2,28 +2,88 @@
 #include "board.h"
 #include "pieces.h"
 #include "board_features.h"
+
 int max_depth = 6;
 
 float eval_val = 0.0f;
 float target_eval_val = 0.0f;
 float eval_speed = 1.0f;
 
-float evaluate_pos(Position state){
+void sort_moves(std::vector<Move>& moves){
+	//for alpha beta pruning
+	return;
+}
+
+void gen_moves(const Position& state, const Legality& L, std::vector<Move>& moves){
+	bool turn = state.w_to_move;
+	for(uint8_t piece = PAWN; piece<=KING; piece++){
+		uint64_t board = state.pieces[turn][piece];
+		while(board){
+			int from_sq = pop_lsb(board);
+			uint64_t to_bb = find_moves(state, L, piece, from_sq);
+			while(to_bb){
+				int to_sq = pop_lsb(to_bb);
+				Move move = build_move(state, from_sq, to_sq);
+				if(piece == PAWN && (to_sq/8 == 0 || to_sq/8 == 7)){//promotion
+					for(uint8_t promo_p = KNIGHT; promo_p<=QUEEN; promo_p ++){
+						move.promo = promo_p;
+						moves.push_back(move);
+					}
+				}
+				else
+					moves.push_back(move);
+			}
+		}
+	}
+	
+}
+static bool same_pos(const Position &a, const Position &b){
+	return a.w_to_move == b.w_to_move && a.castling == b.castling
+	    && memcmp(a.pieces, b.pieces, sizeof(a.pieces)) == 0;
+}
+
+int check_endgame(const Legality& L, const std::vector<Move>& moves){
+	//0 = non finisce, 1 = tie, 2 = checkmate per il colore opposto (!w_to_move)
+
+	//manca patta per ripetizione
+	if(moves.empty()){
+		if(L.checkers != 0)//stalemate
+			return TIE;
+		else if(L.checkers != 0)
+			return CHECKMATE;
+	}
+
+	int contam = 1;
+	for(int i =0;i<record.size()-1; i++){
+		if(same_pos(record[i], record[record.size()-1])){
+			contam++;
+			if(contam>=3)
+				return TIE;//repetition
+		}
+			
+	}
+	return NO_ENDG;
+
+}
+
+float evaluate_pos(Position& state){
 	
     float ris = 0.0f;
 	int sq;//per ora è solo valori: poi anche valori in base alla posizione
 	//MAPPE DI CONVENIENZA -> devo capire come farle (? da file forse)
 	float val;
     for(uint8_t piece = PAWN; piece<=KING; piece++){
-        while(state.pieces[0][piece]){
+		uint64_t board = state.pieces[0][piece];
+        while(board){
             val =piece_value[piece];
-            sq = pop_lsb(state.pieces[0][piece]);
+            sq = pop_lsb(board);
 
 			ris -= val;
         }
-        while(state.pieces[1][piece]){
+		board = state.pieces[1][piece];
+        while(board){
             val=piece_value[piece];
-            sq = pop_lsb(state.pieces[1][piece]);
+            sq = pop_lsb(board);
 
 			ris+=val;
         }

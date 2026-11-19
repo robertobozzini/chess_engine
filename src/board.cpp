@@ -3,13 +3,17 @@
 #include "menu_main.h"
 #include "board_features.h"
 #include "pieces.h"
+#include "evaluation.h"
+#include "buttons.h"
 
 using namespace std;
 
 Vector2 corner;
 int squaresize, chessboardsize;
 
+bool choosing;
 
+int end_game = NO_ENDG;
 
 //BOARD CHANGE OPERATIONS
 
@@ -159,6 +163,12 @@ void board_reset(void){
 	arrows.clear();
 
 	current_legality = legality(currentp);
+	choosing = 0;
+
+	end_game = NO_ENDG;
+	
+	lobby_button.state = 0;
+	restart_button.state = 0;
 
 }
 
@@ -186,14 +196,16 @@ void board_init(void){
 	//fai or per trovare all
 	startingp.all = startingp.occ[0] | startingp.occ[1];
 	startingp.castling=15;
-	startingp.choosing = 0;
+
+	//buttons
+	game_buttons_init();
 
 	board_reset();
 }
 
 Move mv;
 
-Move build_move(Position &s, int from, int to){
+Move build_move(const Position &s, int from, int to){
 	uint8_t piece = s.type_on[from], captured = s.type_on[to], promo = EMPTY, flag = NORMAL;
 
 	bool double_push = piece == PAWN && abs(to - from) == 16;
@@ -206,7 +218,7 @@ Move build_move(Position &s, int from, int to){
 	else if(castle) flag = CASTLE;
 
 	if(promotion){
-		s.choosing = 1;
+		choosing = 1;
 	}
 	return Move{from, to, piece, captured, promo, flag};
 }
@@ -214,13 +226,13 @@ Move build_move(Position &s, int from, int to){
 static uint8_t rights_kept(int sq){ 
 	uint8_t mxv = 0;
 	mxv = ~mxv;
-	switch(sq){ 
-		case A1:return mxv & ~(WK|WQ); 
-		case A5:return mxv & ~(BK|BQ); 
+	switch(sq){
+		case A1:return mxv & ~WQ; 
+		case A5:return mxv & ~(WK|WQ); 
 		case A8:return mxv & ~WK; 
-		case H1:return mxv & ~WQ; 
-		case H5:return mxv & ~BK; 
-		case H8:return mxv & ~BQ; 
+		case H1:return mxv & ~BQ; 
+		case H5:return mxv & ~(BK|BQ); 
+		case H8:return mxv & ~BK; 
 		default:return mxv; 
 	} 
 }
@@ -238,7 +250,7 @@ void apply_move(Position &state, const Move &mv){
 		set_board_piece(state, turn, kingside ? mv.from+1 : mv.from-1, ROOK);
 	}
 	if(mv.promo != EMPTY){
-		state.choosing = 0;
+		choosing = 0;
 	}
 	state.castling &= rights_kept(mv.from) & rights_kept(mv.to); //mask per modificare movimento di re e rooks:
 	//6 totali: 2 torri e 1 re per colore
@@ -253,7 +265,24 @@ void change_turn(const Move &new_move){
 	arrows.clear();
 
 	current_legality = legality(currentp);//aggiorno la legalità
+
+	//check for endgame
+	std::vector<Move> moves;
+	gen_moves(currentp, current_legality, moves);
+	end_game = check_endgame(current_legality, moves);
+
 }
+
+void change_turn_bot(const Move &new_move, const std::vector<Move>&moves){//from bot to player
+	apply_move(currentp, new_move);
+	record.push_back(currentp);
+
+	current_legality = legality(currentp);//aggiorno la legalità
+
+	end_game = check_endgame(current_legality, moves);
+}
+
+float transparency = 0.2f;
 
 void board_draw(void){
 
@@ -276,11 +305,38 @@ void board_draw(void){
 			
 		}
 	}		
+
+
+	//last move 
+	
+	if(currentp.lastmove.flag != NO_MOVE){
+		Vector2 pos = sq_to_coord(currentp.lastmove.from);
+
+		if(!settings[TURN]){
+			pos = invert_coord(pos);
+		}
+		int top=corner.y+pos.y*squaresize;
+		int left=corner.x+pos.x*squaresize;
+
+		DrawRectangle(left, top, squaresize, squaresize, Fade(YELLOW, transparency));
+
+		pos = sq_to_coord(currentp.lastmove.to);
+
+		if(!settings[TURN]){
+			pos = invert_coord(pos);
+		}
+		top=corner.y+pos.y*squaresize;
+		left=corner.x+pos.x*squaresize;
+
+		DrawRectangle(left, top, squaresize, squaresize, Fade(YELLOW, transparency));
+
+	}
 	
 	pieces_draw(0);
 	pieces_draw(1);
+
 	
-	if(currentp.choosing){
+	if(choosing){
 		//roba
 		int promosq = mv.to;//square di dove si trova: da qua shifto verso alto o basso
 		bool turn = currentp.w_to_move;
@@ -309,4 +365,13 @@ void board_draw(void){
 	}
 
 	draw_features();
+
+	if(end_game != NO_ENDG){
+		//disegno schermata finale
+		DrawRectangle(corner.x, corner.y, chessboardsize, chessboardsize, Fade(RED, transparency));
+
+		//disegno scritta di endgame
+		//endgame_button.text
+
+	}
 }

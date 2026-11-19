@@ -5,13 +5,15 @@ menu:
     rendo bottoni non inutili
 
 game:
+    SISTEMARE PROMOTION
 
-    controllo di aver sistemato inizalizzazioni, dichiarazioni ecc
+    fare bottone di torna alla lobby
+
+    fare fine partita: schermata e patta per ripetizione
+
+    ricontrollo: polish e altro
 
     metto suoni
 
     creo e implemento mappe di convenienza per i pezzi (per ora eval no depth)
-    
-    sistemo lastmove: arrocco, en passant e altro
-    gestisco promozione
 

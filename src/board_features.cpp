@@ -4,10 +4,9 @@
 #include "menu_main.h"
 #include "board_features.h"
 #include "evaluation.h"
+#include "buttons.h"
 
 using namespace std;
-
-
 
 uint8_t held_piece;// = EMPTY;//empty
 int held_piece_sq;// = NO_SQ;
@@ -15,8 +14,41 @@ Vector2 st_arrow_pos = (Vector2){-1,-1};
 vector<pair<Vector2,Vector2>>arrows;
 float scale_arrow_width = 0.15f;
 
+Button restart_button;
+Button lobby_button;
+
+void game_buttons_init(void){
+
+	fontsize = 30;
+    uiFont = LoadFontEx("../Fonts/Inter/static/Inter_28pt-ExtraBold.ttf", fontsize, NULL, 0);
+
+	Vector2 button_size;
+	button_size.x = ScreenWidth/8.0f;
+    button_size.y = ScreenHeight/10.0f;
+
+	Vector2 button_pos;
+    button_pos.x = ScreenWidth*1.0f/6.0f - button_size.x/2.0f;
+    button_pos.y = ScreenHeight*3.0f/5.0f;
+
+	lobby_button.init(button_pos, button_size, "return to lobby", fontsize, uiFont, nullptr);
+	
+	button_pos.y += 2*button_size.y;
+	//newpos
+	restart_button.init(button_pos, button_size, "new game", fontsize, uiFont, board_reset);
+
+	
+}
+
 void handle_mouse(void){
     Vector2 mouse_position = GetMousePosition();
+
+	restart_button.button_event_handler();
+	lobby_button.button_event_handler();
+
+	if(end_game != NO_ENDG){
+
+		return;
+	}
     if(!on_board(mouse_position)){
 
 		if(held_piece!=EMPTY){
@@ -39,7 +71,7 @@ void handle_mouse(void){
 	int sq = coord_to_sq(board_pos);
 
 
-	if(currentp.choosing){
+	if(choosing){
 		//gestisco
 		int promosq = mv.to;//square di dove si trova: da qua shifto verso alto o basso
 		bool turn = currentp.w_to_move;
@@ -92,7 +124,7 @@ void handle_mouse(void){
 
 			mv = build_move(currentp, held_piece_sq, sq);
 
-			if(!currentp.choosing){
+			if(!choosing){
 				change_turn(mv);
 			}
 		}
@@ -104,10 +136,15 @@ void handle_mouse(void){
 
 }
 
-void handle_features(void){
+bool handle_features(void){
+
 	handle_mouse();
 
 	if(settings[EVAL])target_eval_val = evaluate_pos(currentp);
+
+	return lobby_button.state;
+	//return false;
+	
 }
 
 
@@ -160,11 +197,32 @@ void draw_attack_table(uint64_t table){
 	}
 }
 
+void game_buttons_draw(void){
+	if(end_game != NO_ENDG){
+		//bottone di new game
+	}
+	//bottone di torna alla lobby
+}
+
 void draw_features(void){
 
 	//arrows
 	for(auto [start,end]:arrows){
 		drawArrow(start,end);
+	}
+
+	if(current_legality.checkers != 0ULL){//RED RING IF KING IS IN CHECK
+		int sq = current_legality.ksq;
+		Vector2 pos = sq_to_coord(sq);
+
+		if(!settings[TURN])
+			pos = invert_coord(pos);
+
+		Vector2 center;
+		center.x = corner.x + squaresize*pos.x + squaresize/2.0f;
+		center.y = corner.y + squaresize*pos.y + squaresize/2.0f;
+
+		DrawRing(center, squaresize*0.38f, squaresize*0.45f, 0, 360, 36, Fade(MAROON, 0.6f));
 	}
 
 	//held piece
@@ -180,4 +238,9 @@ void draw_features(void){
 	}
 
 	if(settings[EVAL])eval_bar_draw();
+
+	restart_button.button_drawer();
+
+	lobby_button.button_drawer();
 }
+

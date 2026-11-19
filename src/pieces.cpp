@@ -200,9 +200,9 @@ uint64_t find_moves(const Position &state, const Legality &L, uint8_t piece, int
 			//+ short && long castle
 			//devo guardare che non si sia mai mosso
 			//Castle
-			int firstcol = (turn)?A1:H1; //prima traversa
+			int firstcol = (turn)?A1:A8; //prima traversa
 
-			if(!L.checkers){//non è sotto attacco
+			if(!L.checkers  && sq == (turn ? A5 : H5)){//non è sotto attacco
 				uint8_t short_right = turn ? WK : BK;
 				uint8_t long_right  = turn ? WQ : BQ;
 
@@ -303,19 +303,5 @@ void pieces_draw(bool turn){
 			pos.y = corner.y + squaresize*row + (float)squaresize/2.0f - texall[turn][i].height*scalepiece/2.0f;
 			draw_piece(turn,i,pos);
 		}
-	}
-
-	if(current_legality.checkers != 0ULL){//RED RING IF KING IS IN CHECK
-		int sq = current_legality.ksq;
-		Vector2 pos = sq_to_coord(sq);
-
-		if(!settings[TURN])
-			pos = invert_coord(pos);
-
-		Vector2 center;
-		center.x = corner.x + squaresize*pos.x + squaresize/2.0f;
-		center.y = corner.y + squaresize*pos.y + squaresize/2.0f;
-
-		DrawRing(center, squaresize*0.38f, squaresize*0.45f, 0, 360, 36, Fade(MAROON, 0.6f));
 	}
 }

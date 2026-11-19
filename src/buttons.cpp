@@ -13,7 +13,8 @@ Color hover_color;
 
 float brightness_factor = -0.15f;
 
-
+int fontsize;
+Font uiFont;
 
 void Button::button_event_handler(void){
 
@@ -55,8 +56,6 @@ void Button::init(Vector2 pos, Vector2 sz, std::string txt, int _fontsize, Font 
 }
 
 
-
-
 void buttons_init(void){
     //inizializza i bottoni
 
@@ -65,8 +64,7 @@ void buttons_init(void){
     textcolor = DARKBROWN;
     hover_textcolor = ColorBrightness(textcolor, brightness_factor);
 
-    int fontsize;
-    Font uiFont;
+
     Vector2 button_size;
 
     fontsize = 50;
