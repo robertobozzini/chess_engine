@@ -25,6 +25,8 @@ float evaluate_pos(Position& state);
 float try_moves(int depth, Position state, const Move &mv, float alpha, float beta, int id);
 
 void eval_asyinc(Position& state);
+
+void do_best_move(const Position& state,const Legality& leg);
 void bot_asyinc(void);
 
 void eval_bar_draw();

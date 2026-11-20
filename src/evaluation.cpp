@@ -186,28 +186,32 @@ void eval_asyinc(Position& state){
 std::atomic<bool> bot_ready{false};
 Move bot_move;
 
-void do_best_move(Position& state, Legality& leg){
-	Move ris = emptymv;
+void do_best_move(const Position& state,const Legality& leg){
+	
+	bot_move = emptymv;
+
 	bool (*better)(float, float) = (!settings[TURN]) 
 		? +[](float a, float b) { return a > b; }   // Maximize (e.g., White)
 		: +[](float a, float b) { return a < b; };  // Minimize (e.g., Black)
 
 	std::vector<Move>bot_moves;
 	gen_moves(state, leg, bot_moves);
-	float alpha = -INF;
-	float beta = INF;
 	sort_moves(bot_moves);
+
 	float best;
 	best = (state.w_to_move)? -INF:INF;
 
-	float* pivotcheck = (state.w_to_move)? &alpha:&beta;
+	float alpha = -INF;
+	float beta = INF;
+	float* pivotcheck = (state.w_to_move)? &alpha:&beta;//what to update
+
 	for(Move& move: bot_moves){
 
 		float val_move = try_moves(0, state, move, alpha, beta, 0);
 
 		if(better(val_move, best)){
 			best = val_move;
-			ris = move;
+			bot_move = move;
 		}
 		if(better(best, *pivotcheck)){
 			*pivotcheck = best;
@@ -215,8 +219,9 @@ void do_best_move(Position& state, Legality& leg){
 		//ris = best(ris, val_move);
 		if(alpha>=beta)break;
 	}
+	
 	bot_ready = 1;
-	bot_move = ris;
+	
 	//change_turn_bot(state, leg, ris, bot_moves);
 }
 

@@ -7,7 +7,9 @@ menu:
 game:
     sistemare a volte eval da -1 a random
 
-    sistemare sorting di pezzi (non mi prende quasi mai le pedine)
+    mettere meglio sorting 
+
+    sistemo bot
 
     ricontrollo: polish e end_game e gestione record per bot
 

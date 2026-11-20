@@ -82,9 +82,6 @@ void handle_turn(int sq){
 	
 	if((currentp.w_to_move == !settings[TURN]) && settings[BOT])//bots turn
 	{
-		if(bot_ready){
-			change_turn(bot_move);
-		}
 		return;
 	}
 
@@ -150,6 +147,11 @@ void handle_mouse(void){
 
 		return;
 	}
+
+	if(bot_ready){
+		change_turn(bot_move);
+	}
+
     if(!on_board(mouse_position)){
 
 		if(held_piece!=EMPTY){
@@ -171,9 +173,6 @@ void handle_mouse(void){
 	int sq = coord_to_sq(board_pos);
 
 
-
-
-
 	//arrows
     if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
         st_arrow_pos = board_pos;
@@ -187,8 +186,8 @@ void handle_mouse(void){
         st_arrow_pos=(Vector2){-1,-1};
     }
 
+	
 	handle_turn(sq);
-
 
 
     
