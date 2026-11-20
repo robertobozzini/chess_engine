@@ -295,18 +295,18 @@ void change_turn(const Move &new_move){
 
 }
 
-void change_turn_bot(Position& state, Legality &L, const Move &new_move, const std::vector<Move>&moves){//from bot to player
-	apply_move(state, new_move);
-	record.push_back(state);
+// void change_turn_bot(Position& state, Legality &L, const Move &new_move, const std::vector<Move>&moves){//from bot to player
+// 	apply_move(state, new_move);
+// 	record.push_back(state);
 
-	L = legality(state);//aggiorno la legalità
+// 	L = legality(state);//aggiorno la legalità
 
-	state.end_game = check_endgame(L, moves);
+// 	state.end_game = check_endgame(L, moves);
 
-	if(settings[EVAL]){
-		eval_asyinc(currentp);
-	}
-}
+// 	if(settings[EVAL]){
+// 		eval_asyinc(currentp);
+// 	}
+// }
 
 float transparency = 0.2f;
 

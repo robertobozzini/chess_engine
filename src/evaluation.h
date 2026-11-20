@@ -14,12 +14,15 @@ extern float eval_val;
 extern std::atomic<float> target_eval_val;
 extern std::atomic<int> search_gen;
 
+extern std::atomic<bool> bot_ready;
+extern Move bot_move;
+
 //void sort_moves(std::vector<Move>& moves);
 void gen_moves(const Position& state, const Legality& L, std::vector<Move>& moves);
 int check_endgame(const Legality& L, const std::vector<Move>& moves);
 
 float evaluate_pos(Position& state);
-float try_moves(int depth, Position state, const Move &mv, float&alpha, float& beta, int id);
+float try_moves(int depth, Position state, const Move &mv, float alpha, float beta, int id);
 
 void eval_asyinc(Position& state);
 void bot_asyinc(void);

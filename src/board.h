@@ -90,7 +90,7 @@ Move build_move(const Position &s, int from, int to);
 void apply_move(Position &p, const Move &m);
 
 void change_turn(const Move &m);
-void change_turn_bot(Position& state, Legality &L, const Move &new_move, const std::vector<Move>&moves);
+// void change_turn_bot(Position& state, Legality &L, const Move &new_move, const std::vector<Move>&moves);
 void board_draw(void);
 
 #endif // CHESSBOARD_H

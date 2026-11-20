@@ -5,7 +5,7 @@
 #include "board_features.h"
 Texture2D texall[2][6];
 
-float piece_value[7] = {100.0f,3000.0f,3200.0f,5000.0f,9000.0f,100000.0f,0.0f};
+float piece_value[7] = {1.0f,3.0f,3.2f,5.0f,9.0f,1500.0f,0.0f};
 float scalepiece = 0.5f;
 
 void load_pieces_textures(void){

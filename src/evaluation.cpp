@@ -15,8 +15,11 @@ std::atomic<int>search_gen{1};
 
 void sort_moves(std::vector<Move>& moves){
 	//for alpha beta pruning
-	auto score = [](const Move& x){
-		return x.flag==CAPTURE ? 1.1f*piece_value[x.captured]-piece_value[x.piece] : -1.0f; //non conviene quasi mai prendere pezzi con la regina(?)
+	auto score = [](const Move& mv){
+		float s = 0.0f;
+		if(mv.captured != EMPTY) s += 100.0f + 10.0f*piece_value[mv.captured] - piece_value[mv.piece]; // vittima grossa, attaccante piccolo
+		if(mv.promo    != EMPTY) s += 80.0f + piece_value[mv.promo];
+		return s;
 	};
 
 	std::sort(moves.begin(), moves.end(), 
@@ -107,7 +110,7 @@ float evaluate_pos(Position& state){
 
 constexpr float INF = 1.0e8 + 7;
 
-float try_moves(int depth, Position state, const Move &mv, float &alpha, float &beta, int id){
+float try_moves(int depth, Position state, const Move &mv, float alpha, float beta, int id){
 	//std::cout<<depth<<" "<<id<<std::endl;
 	if(id!=0 && (id != search_gen))return 0.0f;//non serve piu
 
@@ -136,13 +139,15 @@ float try_moves(int depth, Position state, const Move &mv, float &alpha, float &
 	//float (*best)(float a, float b);
 	//best = (state.w_to_move)?std::fmaxf:std::fminf;
 	sort_moves(moves);
-
+	bool checked = 0;
 	for(Move& move: moves){
-		if(id != search_gen)
+		if(id!=0 && (id != search_gen))
 			break;//stop searching
 
-		if((depth>max_depth && move.flag!=CAPTURE))//se sono gia a max_depth
+		if((depth>max_depth && move.flag!=CAPTURE))//se sono gia a max_depth e non è cattura ignoro
 			continue;
+		
+		checked = 1;
 
 		float val_move = try_moves(depth+1, state, move, alpha, beta, id);
 
@@ -158,6 +163,8 @@ float try_moves(int depth, Position state, const Move &mv, float &alpha, float &
 		if(alpha>=beta)break;
 	}
 
+	if(!checked)
+		ris = evaluate_pos(state);
 	record.pop_back();
 	//state = record[record.size()-1];//sistemo lo stato
 	
@@ -176,6 +183,9 @@ void eval_asyinc(Position& state){
 	}).detach();
 }
 
+std::atomic<bool> bot_ready{false};
+Move bot_move;
+
 void do_best_move(Position& state, Legality& leg){
 	Move ris = emptymv;
 	bool (*better)(float, float) = (!settings[TURN]) 
@@ -183,15 +193,15 @@ void do_best_move(Position& state, Legality& leg){
 		: +[](float a, float b) { return a < b; };  // Minimize (e.g., Black)
 
 	std::vector<Move>bot_moves;
-	gen_moves(currentp, current_legality, bot_moves);
+	gen_moves(state, leg, bot_moves);
 	float alpha = -INF;
 	float beta = INF;
 	sort_moves(bot_moves);
 	float best;
+	best = (state.w_to_move)? -INF:INF;
 
 	float* pivotcheck = (state.w_to_move)? &alpha:&beta;
 	for(Move& move: bot_moves){
-
 
 		float val_move = try_moves(0, state, move, alpha, beta, 0);
 
@@ -205,11 +215,15 @@ void do_best_move(Position& state, Legality& leg){
 		//ris = best(ris, val_move);
 		if(alpha>=beta)break;
 	}
-	change_turn_bot(state, leg, ris, bot_moves);
+	bot_ready = 1;
+	bot_move = ris;
+	//change_turn_bot(state, leg, ris, bot_moves);
 }
 
 void bot_asyinc(void){
 	std::thread([]{
+		bot_ready = false;
+		bot_move = emptymv;
 		do_best_move(currentp, current_legality);
 	}).detach();
 }
@@ -217,9 +231,9 @@ void bot_asyinc(void){
 
 void eval_bar_draw(){
 	
-	float k = 10000.0f;
-
 	
+	float k = 8;
+
 	float barheight = chessboardsize;
 	float barwidth = squaresize/2;
 	//lo spostamento dovrebbe essere a livello logaritmico es log(|val|) o boh, comunque su un totale di 100 - 100
@@ -229,7 +243,7 @@ void eval_bar_draw(){
 		eval_val = target_eval_val;
 	
 	float barprop;// tra -1 e +1, indica quanto verso un lato va la riga
-	if(fabs(eval_val)>100000.0f)//se è matto praticamente (capisco come gestirlo poi) !!!
+	if(fabs(eval_val)>1000.0f)//se è matto praticamente (capisco come gestirlo poi) !!!
 		barprop = (eval_val > 0)? 1.0f:-1.0f;
 	else 
 		barprop = tanh(eval_val / k);

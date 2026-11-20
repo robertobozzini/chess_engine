@@ -81,7 +81,12 @@ void handle_turn(int sq){
 
 	
 	if((currentp.w_to_move == !settings[TURN]) && settings[BOT])//bots turn
+	{
+		if(bot_ready){
+			change_turn(bot_move);
+		}
 		return;
+	}
 
 	if(choosing){
 		//gestisco
@@ -105,6 +110,15 @@ void handle_turn(int sq){
 
 		return;
 	}
+
+		//cout<<"ti trovi in "<<board_pos.x<<" "<<board_pos.y<<" al quadrato n "<<sq<<endl;
+    //handle del pezzo in mano
+    if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && is_occ(currentp.occ[currentp.w_to_move], sq)){//sicuramente non avevo pezzi in mano
+        held_piece = currentp.type_on[sq];
+		held_piece_sq = sq;
+
+		//tolgo pezzo dalla board
+    }
 	else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && held_piece != EMPTY){
 
 		u_int64_t legal_moves = find_moves(currentp, current_legality, held_piece, held_piece_sq);
@@ -173,15 +187,9 @@ void handle_mouse(void){
         st_arrow_pos=(Vector2){-1,-1};
     }
 
+	handle_turn(sq);
 
-	//cout<<"ti trovi in "<<board_pos.x<<" "<<board_pos.y<<" al quadrato n "<<sq<<endl;
-    //handle del pezzo in mano
-    if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && is_occ(currentp.occ[currentp.w_to_move], sq)){//sicuramente non avevo pezzi in mano
-        held_piece = currentp.type_on[sq];
-		held_piece_sq = sq;
 
-		//tolgo pezzo dalla board
-    }
 
     
 

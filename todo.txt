@@ -5,7 +5,7 @@ menu:
     rendo bottoni non inutili
 
 game:
-    calibrare eval bar
+    sistemare a volte eval da -1 a random
 
     sistemare sorting di pezzi (non mi prende quasi mai le pedine)
 
