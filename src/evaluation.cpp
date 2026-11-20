@@ -3,8 +3,8 @@
 #include "pieces.h"
 #include "board_features.h"
 
-int max_depth = 4;
-int max_capture_depth = 10; //10 captures
+int max_depth = 2;
+int max_capture_depth = 4; //10 captures
 
 float eval_val = 0.0f;
 float target_eval_val = 0.0f;
@@ -97,11 +97,13 @@ float evaluate_pos(Position& state){
 
 constexpr float INF = 1.0e9 + 7;
 
-float try_moves(int depth, Position state, const Move &mv){
+float try_moves(int depth, Position& state, const Move &mv){
 	Legality hypot_legality;//hypotethical
 	std::vector<Move>moves;
 	if(mv.flag != NO_MOVE)
 		apply_move(state, mv);
+
+	record.push_back(state);
 	hypot_legality = legality(state);
 	gen_moves(state, hypot_legality, moves);
 
@@ -129,9 +131,9 @@ float try_moves(int depth, Position state, const Move &mv){
 			continue;
 		ris = best(ris, try_moves(depth+1, state, move));
 	}
+	//record.pop_back();
 	record.pop_back();
-	// record.pop_back();
-	// state = record[record.size()-1];//sistemo lo stato
+	state = record[record.size()-1];//sistemo lo stato
 	
 	return ris;
 

@@ -282,6 +282,10 @@ void change_turn(const Move &new_move){
 	gen_moves(currentp, current_legality, moves);
 	currentp.end_game = check_endgame(current_legality, moves);
 
+	if(settings[EVAL]){
+		target_eval_val = try_moves(0, currentp, emptymv);
+	}
+
 }
 
 void change_turn_bot(Position& state, Legality &L, const Move &new_move, const std::vector<Move>&moves){//from bot to player
@@ -291,6 +295,10 @@ void change_turn_bot(Position& state, Legality &L, const Move &new_move, const s
 	L = legality(state);//aggiorno la legalità
 
 	state.end_game = check_endgame(L, moves);
+
+	if(settings[EVAL]){
+		target_eval_val = try_moves(0, currentp, emptymv);
+	}
 }
 
 float transparency = 0.2f;

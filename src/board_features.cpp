@@ -29,6 +29,10 @@ void take_back_move(void){
 	record.pop_back();
 	currentp = record[record.size()-1];
 	current_legality = legality(currentp);
+
+	if(settings[EVAL]){
+		target_eval_val = try_moves(0, currentp, emptymv);
+	}
 }
 
 void rematch(void){
@@ -169,10 +173,6 @@ void handle_mouse(void){
 bool handle_features(void){
 
 	handle_mouse();
-
-	if(settings[EVAL]){
-		target_eval_val = try_moves(0, currentp, emptymv);
-	}
 
 	return lobby_button.state;
 	//return false;

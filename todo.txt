@@ -7,6 +7,8 @@ menu:
 game:
     ricontrollo: polish e end_game e gestione record per bot
 
+    tie by insufficient material
+
     metto suoni
 
     faccio bottone torna indietro di mossa
