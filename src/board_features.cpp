@@ -23,15 +23,22 @@ Font text_font;
 void take_back_move(void){
 	//gestisco anche legality
 	take_back_button.state = 0;
-	if(record.size() == 1)
-		return; //starting position
-
+	if(record.size() == 1){
+		 //starting position
+		search_gen = 1;
+		eval_val = 0.0f;
+		target_eval_val = 0.0f;
+		return;
+	}
 	record.pop_back();
 	currentp = record[record.size()-1];
 	current_legality = legality(currentp);
 
 	if(settings[EVAL]){
-		target_eval_val = try_moves(0, currentp, emptymv);
+		eval_asyinc(currentp);
+	}
+	if((currentp.w_to_move == !settings[TURN]) && settings[BOT]){
+		bot_asyinc();
 	}
 }
 
@@ -70,6 +77,54 @@ void game_buttons_init(void){
 	
 }
 
+void handle_turn(int sq){
+
+	
+	if((currentp.w_to_move == !settings[TURN]) && settings[BOT])//bots turn
+		return;
+
+	if(choosing){
+		//gestisco
+		int promosq = mv.to;//square di dove si trova: da qua shifto verso alto o basso
+		bool turn = currentp.w_to_move;
+
+		int shift_constant = (turn)? -8:8;
+
+		if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+			for(uint8_t p=KNIGHT; p<=QUEEN; p++){
+				if(sq == (promosq + (p-1)*shift_constant)){
+					//im on that square
+					mv.promo = p;
+					//currentp.choosing = 0;
+					choosing = 0;
+					change_turn(mv);
+					break;
+				}
+			}
+		} 
+
+		return;
+	}
+	else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && held_piece != EMPTY){
+
+		u_int64_t legal_moves = find_moves(currentp, current_legality, held_piece, held_piece_sq);
+		bool legal_move = is_occ(legal_moves, sq);
+		
+		if(legal_move){//moves
+
+			mv = build_move(currentp, held_piece_sq, sq);
+
+			if(mv.piece == PAWN && (sq/8 == 0 || sq/8 == 7))
+				choosing = 1;  
+			else 
+				change_turn(mv);
+		}
+
+        held_piece=EMPTY;
+		held_piece_sq = NO_SQ;
+    }
+}
+
 void handle_mouse(void){
     Vector2 mouse_position = GetMousePosition();
 
@@ -97,34 +152,13 @@ void handle_mouse(void){
     Vector2 board_pos = chessboard_pos(mouse_position);
 
 
-
 	if(!settings[TURN])//giochi come il nero:devi invertire
 		board_pos=invert_coord(board_pos);
 	int sq = coord_to_sq(board_pos);
 
 
-	if(choosing){
-		//gestisco
-		int promosq = mv.to;//square di dove si trova: da qua shifto verso alto o basso
-		bool turn = currentp.w_to_move;
 
-		int shift_constant = (turn)? -8:8;
 
-		if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-			for(uint8_t p=KNIGHT; p<=QUEEN; p++){
-				if(sq == (promosq + (p-1)*shift_constant)){
-					//im on that square
-					mv.promo = p;
-					//currentp.choosing = 0;
-					choosing = 0;
-					change_turn(mv);
-					break;
-				}
-			}
-		} 
-
-		return;
-	}
 
 	//arrows
     if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
@@ -148,24 +182,7 @@ void handle_mouse(void){
 
 		//tolgo pezzo dalla board
     }
-    else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && held_piece != EMPTY){
 
-		u_int64_t legal_moves = find_moves(currentp, current_legality, held_piece, held_piece_sq);
-		bool legal_move = is_occ(legal_moves, sq);
-		
-		if(legal_move){//moves
-
-			mv = build_move(currentp, held_piece_sq, sq);
-
-			if(mv.piece == PAWN && (sq/8 == 0 || sq/8 == 7))
-				choosing = 1;  
-			else 
-				change_turn(mv);
-		}
-
-        held_piece=EMPTY;
-		held_piece_sq = NO_SQ;
-    }
     
 
 }

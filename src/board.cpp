@@ -171,6 +171,10 @@ void board_reset(void){
 	
 	lobby_button.state = 0;
 	restart_button.state = 0;
+	
+	search_gen = 1;
+	target_eval_val = 0.0f;
+	eval_val = 0.0f;
 
 }
 
@@ -283,7 +287,10 @@ void change_turn(const Move &new_move){
 	currentp.end_game = check_endgame(current_legality, moves);
 
 	if(settings[EVAL]){
-		target_eval_val = try_moves(0, currentp, emptymv);
+		eval_asyinc(currentp);
+	}
+	if((currentp.w_to_move == !settings[TURN]) && settings[BOT]){
+		bot_asyinc();
 	}
 
 }
@@ -297,7 +304,7 @@ void change_turn_bot(Position& state, Legality &L, const Move &new_move, const s
 	state.end_game = check_endgame(L, moves);
 
 	if(settings[EVAL]){
-		target_eval_val = try_moves(0, currentp, emptymv);
+		eval_asyinc(currentp);
 	}
 }
 

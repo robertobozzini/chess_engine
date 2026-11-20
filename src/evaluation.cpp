@@ -2,16 +2,27 @@
 #include "board.h"
 #include "pieces.h"
 #include "board_features.h"
+#include "menu_main.h"
 
-int max_depth = 2;
-int max_capture_depth = 4; //10 captures
+int max_depth = 4;
+int max_capture_depth = 7; //10 captures
 
 float eval_val = 0.0f;
-float target_eval_val = 0.0f;
+std::atomic<float> target_eval_val{0.0f};
 float eval_speed = 1.0f;
+
+std::atomic<int>search_gen{1};
 
 void sort_moves(std::vector<Move>& moves){
 	//for alpha beta pruning
+	auto score = [](const Move& x){
+		return x.flag==CAPTURE ? 1.1f*piece_value[x.captured]-piece_value[x.piece] : -1.0f; //non conviene quasi mai prendere pezzi con la regina(?)
+	};
+
+	std::sort(moves.begin(), moves.end(), 
+		[&](const Move& a, const Move& b){ 
+			return score(a) > score(b); 
+	});
 	return;
 }
 
@@ -46,7 +57,6 @@ static bool same_pos(const Position &a, const Position &b){
 int check_endgame(const Legality& L, const std::vector<Move>& moves){
 	//0 = non finisce, 1 = tie, 2 = checkmate per il colore opposto (!w_to_move)
 
-	//manca patta per ripetizione
 	if(moves.empty()){
 		int n = __builtin_popcountll(L.checkers);
 		if(n==0)
@@ -95,57 +105,119 @@ float evaluate_pos(Position& state){
 }
 
 
-constexpr float INF = 1.0e9 + 7;
+constexpr float INF = 1.0e8 + 7;
 
-float try_moves(int depth, Position& state, const Move &mv){
-	Legality hypot_legality;//hypotethical
-	std::vector<Move>moves;
+float try_moves(int depth, Position state, const Move &mv, float &alpha, float &beta, int id){
+	//std::cout<<depth<<" "<<id<<std::endl;
+	if(id!=0 && (id != search_gen))return 0.0f;//non serve piu
+
 	if(mv.flag != NO_MOVE)
 		apply_move(state, mv);
 
-	record.push_back(state);
-	hypot_legality = legality(state);
+	if((depth>=max_depth && mv.flag!=CAPTURE) || depth>= max_capture_depth){
+		return evaluate_pos(state);
+	}
+
+	Legality hypot_legality = legality(state);//hypotethical
+	std::vector<Move>moves;
 	gen_moves(state, hypot_legality, moves);
 
 	state.end_game = check_endgame(hypot_legality, moves);
-	float ris=(state.w_to_move)? -INF: INF;
+	
 
+	float ris=(state.w_to_move)? -INF: INF;//worst case
+	
 	if(state.end_game != NO_ENDG){
-		ris = (state.end_game == TIE)?0.0f:ris;
-		record.pop_back();
-		state = record[record.size()-1];
-		return ris;
-	}
-	else if((depth>=max_depth && mv.flag!=CAPTURE) || depth>= max_capture_depth){
-		ris = evaluate_pos(state);
-		record.pop_back();
-		state = record[record.size()-1];
-		return ris;
+		return (state.end_game == TIE)?0.0f:ris;//checkmate = worst case
 	}
 
-	float (*best)(float a, float b);
-	best = (state.w_to_move)?std::fmaxf:std::fminf;
+	record.push_back(state);//if all is ok i push back for checking stuff
+
+	//float (*best)(float a, float b);
+	//best = (state.w_to_move)?std::fmaxf:std::fminf;
+	sort_moves(moves);
 
 	for(Move& move: moves){
+		if(id != search_gen)
+			break;//stop searching
+
 		if((depth>max_depth && move.flag!=CAPTURE))//se sono gia a max_depth
 			continue;
-		ris = best(ris, try_moves(depth+1, state, move));
+
+		float val_move = try_moves(depth+1, state, move, alpha, beta, id);
+
+		if(state.w_to_move){
+			ris = std::max(ris, val_move);
+			alpha = std::max(ris, alpha);
+		}
+		else {
+			ris = std::min(ris, val_move);
+			beta = std::min(ris, beta);
+		}
+		//ris = best(ris, val_move);
+		if(alpha>=beta)break;
 	}
-	//record.pop_back();
+
 	record.pop_back();
-	state = record[record.size()-1];//sistemo lo stato
+	//state = record[record.size()-1];//sistemo lo stato
 	
 	return ris;
 
 }
 
+void eval_asyinc(Position& state){
+	int id = ++search_gen;
+	std::thread([state, id]{
+		float alpha = -INF;
+		float beta = INF;
+		float r = try_moves(0, state, emptymv, alpha, beta, id);
+		if(id == search_gen)target_eval_val = r;
+		std::cout<<id<<" - "<< search_gen<< " - ris: "<<r<<std::endl;
+	}).detach();
+}
+
+void do_best_move(Position& state, Legality& leg){
+	Move ris = emptymv;
+	bool (*better)(float, float) = (!settings[TURN]) 
+		? +[](float a, float b) { return a > b; }   // Maximize (e.g., White)
+		: +[](float a, float b) { return a < b; };  // Minimize (e.g., Black)
+
+	std::vector<Move>bot_moves;
+	gen_moves(currentp, current_legality, bot_moves);
+	float alpha = -INF;
+	float beta = INF;
+	sort_moves(bot_moves);
+	float best;
+
+	float* pivotcheck = (state.w_to_move)? &alpha:&beta;
+	for(Move& move: bot_moves){
 
 
+		float val_move = try_moves(0, state, move, alpha, beta, 0);
+
+		if(better(val_move, best)){
+			best = val_move;
+			ris = move;
+		}
+		if(better(best, *pivotcheck)){
+			*pivotcheck = best;
+		}
+		//ris = best(ris, val_move);
+		if(alpha>=beta)break;
+	}
+	change_turn_bot(state, leg, ris, bot_moves);
+}
+
+void bot_asyinc(void){
+	std::thread([]{
+		do_best_move(currentp, current_legality);
+	}).detach();
+}
 
 
 void eval_bar_draw(){
 	
-	float k = 8;
+	float k = 10000.0f;
 
 	
 	float barheight = chessboardsize;
@@ -157,7 +229,7 @@ void eval_bar_draw(){
 		eval_val = target_eval_val;
 	
 	float barprop;// tra -1 e +1, indica quanto verso un lato va la riga
-	if(fabs(eval_val)>1000.0f)//se è matto praticamente (capisco come gestirlo poi) !!!
+	if(fabs(eval_val)>100000.0f)//se è matto praticamente (capisco come gestirlo poi) !!!
 		barprop = (eval_val > 0)? 1.0f:-1.0f;
 	else 
 		barprop = tanh(eval_val / k);

@@ -5,19 +5,21 @@ menu:
     rendo bottoni non inutili
 
 game:
+    calibrare eval bar
+
+    sistemare sorting di pezzi (non mi prende quasi mai le pedine)
+
     ricontrollo: polish e end_game e gestione record per bot
 
     tie by insufficient material
 
-    metto suoni
+    conteggio di pezzi (puro)
 
-    faccio bottone torna indietro di mossa
+    metto suoni
 
     creo e implemento mappe di convenienza per i pezzi (per ora eval no depth)
 
     faccio ricerca in profondità -> metto cambio turno per il bot (non inquina currentp)
-
-    alpha beta pruning
 
     faccio script per provare posizioni (e script per creare posizioni(?) sia random sia non)
 
