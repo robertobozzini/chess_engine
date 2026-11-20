@@ -200,7 +200,7 @@ uint64_t find_moves(const Position &state, const Legality &L, uint8_t piece, int
 			//+ short && long castle
 			//devo guardare che non si sia mai mosso
 			//Castle
-			int firstcol = (turn)?A1:A8; //prima traversa
+			int firstcol = (turn)?A1:H1; //prima traversa
 
 			if(!L.checkers  && sq == (turn ? A5 : H5)){//non è sotto attacco
 				uint8_t short_right = turn ? WK : BK;

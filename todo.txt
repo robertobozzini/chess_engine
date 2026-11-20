@@ -5,9 +5,20 @@ menu:
     rendo bottoni non inutili
 
 game:
-    ricontrollo: polish e altro
+    ricontrollo: polish e end_game e gestione record per bot
 
     metto suoni
 
+    faccio bottone torna indietro di mossa
+
     creo e implemento mappe di convenienza per i pezzi (per ora eval no depth)
 
+    faccio ricerca in profondità -> metto cambio turno per il bot (non inquina currentp)
+
+    alpha beta pruning
+
+    faccio script per provare posizioni (e script per creare posizioni(?) sia random sia non)
+
+
+
+debug:

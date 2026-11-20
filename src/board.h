@@ -21,7 +21,7 @@ struct Move {
     int from, to; 
     uint8_t piece, captured, promo, flag; 
 }; // captured/promo = EMPTY se assenti
-enum MoveFlag : uint8_t { NORMAL, DOUBLE_PUSH, EN_PASSANT, CASTLE, NO_MOVE };
+enum MoveFlag : uint8_t { NORMAL, DOUBLE_PUSH, EN_PASSANT, CASTLE, CAPTURE, NO_MOVE };
 
 struct Position {
     uint64_t pieces[2][6];   //[color][type] -> in un solo numero mi salvo tutte le posizioni in cui un pezzo di un colore si trova: se il bit è 1 se ne trova 1
@@ -33,17 +33,16 @@ struct Position {
     //int8_t enpas_sq; //casa di en passant: -1 se nessuna
     //uint8_t halfmove; 
 	Move lastmove;
-	
+	int end_game; //0 = no end game, 1 = tie, 2 = checkmate
 };
 extern bool choosing;
-extern int end_game; //0 = no end game, 1 = tie, 2 = checkmate
 extern Position startingp;
 extern Position currentp;
 extern Position emptyp;
 
+extern Move emptymv;
+
 extern std::vector<Position>record;
-
-
 
 extern Vector2 corner;
 extern int squaresize, chessboardsize;

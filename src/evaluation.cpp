@@ -3,7 +3,8 @@
 #include "pieces.h"
 #include "board_features.h"
 
-int max_depth = 6;
+int max_depth = 4;
+int max_capture_depth = 10; //10 captures
 
 float eval_val = 0.0f;
 float target_eval_val = 0.0f;
@@ -92,6 +93,52 @@ float evaluate_pos(Position& state){
 
     return ris;
 }
+
+
+constexpr float INF = 1.0e9 + 7;
+
+float try_moves(int depth, Position state, const Move &mv){
+	Legality hypot_legality;//hypotethical
+	std::vector<Move>moves;
+	if(mv.flag != NO_MOVE)
+		apply_move(state, mv);
+	hypot_legality = legality(state);
+	gen_moves(state, hypot_legality, moves);
+
+	state.end_game = check_endgame(hypot_legality, moves);
+	float ris=(state.w_to_move)? -INF: INF;
+
+	if(state.end_game != NO_ENDG){
+		ris = (state.end_game == TIE)?0.0f:ris;
+		record.pop_back();
+		state = record[record.size()-1];
+		return ris;
+	}
+	else if((depth>=max_depth && mv.flag!=CAPTURE) || depth>= max_capture_depth){
+		ris = evaluate_pos(state);
+		record.pop_back();
+		state = record[record.size()-1];
+		return ris;
+	}
+
+	float (*best)(float a, float b);
+	best = (state.w_to_move)?std::fmaxf:std::fminf;
+
+	for(Move& move: moves){
+		if((depth>max_depth && move.flag!=CAPTURE))//se sono gia a max_depth
+			continue;
+		ris = best(ris, try_moves(depth+1, state, move));
+	}
+	record.pop_back();
+	// record.pop_back();
+	// state = record[record.size()-1];//sistemo lo stato
+	
+	return ris;
+
+}
+
+
+
 
 
 void eval_bar_draw(){

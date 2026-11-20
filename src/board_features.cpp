@@ -14,10 +14,27 @@ Vector2 st_arrow_pos = (Vector2){-1,-1};
 vector<pair<Vector2,Vector2>>arrows;
 float scale_arrow_width = 0.15f;
 
+Button take_back_button;
 Button restart_button;
 Button lobby_button;
 Font board_font;
 Font text_font;
+
+void take_back_move(void){
+	//gestisco anche legality
+	take_back_button.state = 0;
+	if(record.size() == 1)
+		return; //starting position
+
+	record.pop_back();
+	currentp = record[record.size()-1];
+	current_legality = legality(currentp);
+}
+
+void rematch(void){
+	settings[TURN] = !settings[TURN];
+	board_reset();
+}
 
 void game_buttons_init(void){
 
@@ -31,9 +48,13 @@ void game_buttons_init(void){
 
 	Vector2 button_pos;
     button_pos.x = ScreenWidth*1.0f/6.0f - button_size.x/2.0f;
-    button_pos.y = ScreenHeight*2.0f/5.0f;
+    button_pos.y = ScreenHeight*1.5f/5.0f;
 
-	restart_button.init(button_pos, button_size, "new game", fontsize, board_font, board_reset);
+	take_back_button.init(button_pos, button_size, "take back move", fontsize, board_font, take_back_move);
+	
+	button_pos.y += 2*button_size.y;
+
+	restart_button.init(button_pos, button_size, "rematch", fontsize, board_font, rematch);
 	
 	button_pos.y += 2*button_size.y;
 	//newpos
@@ -41,15 +62,18 @@ void game_buttons_init(void){
 	lobby_button.init(button_pos, button_size, "return to lobby", fontsize, board_font, nullptr);
 
 	
+
+	
 }
 
 void handle_mouse(void){
     Vector2 mouse_position = GetMousePosition();
 
+	take_back_button.button_event_handler();
 	restart_button.button_event_handler();
 	lobby_button.button_event_handler();
 
-	if(end_game != NO_ENDG){
+	if(currentp.end_game != NO_ENDG){
 
 		return;
 	}
@@ -146,7 +170,9 @@ bool handle_features(void){
 
 	handle_mouse();
 
-	if(settings[EVAL])target_eval_val = evaluate_pos(currentp);
+	if(settings[EVAL]){
+		target_eval_val = try_moves(0, currentp, emptymv);
+	}
 
 	return lobby_button.state;
 	//return false;
@@ -203,13 +229,6 @@ void draw_attack_table(uint64_t table){
 	}
 }
 
-void game_buttons_draw(void){
-	if(end_game != NO_ENDG){
-		//bottone di new game
-	}
-	//bottone di torna alla lobby
-}
-
 void draw_features(void){
 
 	//arrows
@@ -244,6 +263,8 @@ void draw_features(void){
 	}
 
 	if(settings[EVAL])eval_bar_draw();
+
+	take_back_button.button_drawer();
 
 	restart_button.button_drawer();
 

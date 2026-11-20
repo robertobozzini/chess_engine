@@ -93,6 +93,8 @@ Position startingp;
 Position currentp;
 Position emptyp;
 
+Move emptymv;
+
 void set_starting_pos(bool color){
 	//devo fare cosa simmetrica rispetto alla riga in messo: row = 0 = 7-> media e 3.5
 	//0 -> 7
@@ -165,7 +167,7 @@ void board_reset(void){
 	current_legality = legality(currentp);
 	choosing = 0;
 
-	end_game = NO_ENDG;
+	//currentp.end_game = NO_ENDG;
 	
 	lobby_button.state = 0;
 	restart_button.state = 0;
@@ -173,6 +175,7 @@ void board_reset(void){
 }
 
 void board_init(void){
+		
     corner.y=(ScreenHeight)/9;
 	squaresize=corner.y;
 	corner.y/=2;
@@ -190,6 +193,7 @@ void board_init(void){
 	startingp = emptyp;
 	startingp.w_to_move=1;
 	startingp.lastmove.flag = NO_MOVE;
+	startingp.end_game = NO_ENDG;
 
 	set_starting_pos(0);
 	set_starting_pos(1);
@@ -201,6 +205,8 @@ void board_init(void){
 	game_buttons_init();
 
 	board_reset();
+
+	emptymv.flag = NO_MOVE;
 }
 
 Move mv;
@@ -216,7 +222,7 @@ Move build_move(const Position &s, int from, int to){
 	if(double_push) flag = DOUBLE_PUSH;
 	else if(diag_to_empty){ flag = EN_PASSANT; captured = PAWN; }
 	else if(castle) flag = CASTLE;
-
+	else if(captured) flag = CAPTURE;
 	// if(promotion){
 	// 	choosing = 1;
 	// }
@@ -238,24 +244,29 @@ static uint8_t rights_kept(int sq){
 }
 
 void apply_move(Position &state, const Move &mv){
+
+	if(mv.flag == NO_MOVE)
+		return;
+
 	bool turn = state.w_to_move;
-	if(mv.flag == EN_PASSANT) clear_board_piece(state, !turn, mv.to + (turn ? -8 : 8), PAWN);
+	state.lastmove = mv;
+	state.w_to_move = !turn;
+
+	state.castling &= rights_kept(mv.from) & rights_kept(mv.to); //mask per modificare movimento di re e rooks:
+	//6 totali: 2 torri e 1 re per colore
 
 	clear_board_piece(state, turn, mv.from, mv.piece);
 	set_board_piece(state, turn, mv.to, (mv.promo!= EMPTY)? mv.promo : mv.piece);
 
-	if(mv.flag == CASTLE){
+	if(mv.flag == EN_PASSANT) 
+		clear_board_piece(state, !turn, mv.to + (turn ? -8 : 8), PAWN);
+	else if(mv.flag == CASTLE){
 		bool kingside = mv.to > mv.from; //long or short?
 		clear_board_piece(state, turn, kingside ? mv.from+3 : mv.from-4, ROOK);
 		set_board_piece(state, turn, kingside ? mv.from+1 : mv.from-1, ROOK);
 	}
-	// if(mv.promo != EMPTY){
-	// 	choosing = 0;
-	// }
-	state.castling &= rights_kept(mv.from) & rights_kept(mv.to); //mask per modificare movimento di re e rooks:
-	//6 totali: 2 torri e 1 re per colore
-	state.lastmove = mv;
-	state.w_to_move = !turn;
+
+
 }
 
 //board handle
@@ -269,17 +280,17 @@ void change_turn(const Move &new_move){
 	//check for endgame
 	std::vector<Move> moves;
 	gen_moves(currentp, current_legality, moves);
-	end_game = check_endgame(current_legality, moves);
+	currentp.end_game = check_endgame(current_legality, moves);
 
 }
 
-void change_turn_bot(const Move &new_move, const std::vector<Move>&moves){//from bot to player
-	apply_move(currentp, new_move);
-	record.push_back(currentp);
+void change_turn_bot(Position& state, Legality &L, const Move &new_move, const std::vector<Move>&moves){//from bot to player
+	apply_move(state, new_move);
+	record.push_back(state);
 
-	current_legality = legality(currentp);//aggiorno la legalità
+	L = legality(state);//aggiorno la legalità
 
-	end_game = check_endgame(current_legality, moves);
+	state.end_game = check_endgame(L, moves);
 }
 
 float transparency = 0.2f;
@@ -380,14 +391,14 @@ void board_draw(void){
 
 	draw_features();
 
-	if(end_game != NO_ENDG){
+	if(currentp.end_game != NO_ENDG){
 		//disegno schermata finale
 		DrawRectangle(corner.x, corner.y, chessboardsize, chessboardsize, Fade(RED, transparency));
 
 		//disegno scritta di endgame
 		//endgame_button.text
 		string text;
-		if(end_game == CHECKMATE){
+		if(currentp.end_game == CHECKMATE){
 			text = (currentp.w_to_move)? "BLACK WINS" : "WHITE WINS";
 		}
 		else{
