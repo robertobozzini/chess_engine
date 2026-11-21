@@ -5,6 +5,8 @@ menu:
     rendo bottoni non inutili
 
 game:
+    sistemo eval_bar
+
     sistemare a volte eval da -1 a random
 
     mettere meglio sorting 

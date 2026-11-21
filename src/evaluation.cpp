@@ -22,7 +22,7 @@ void sort_moves(std::vector<Move>& moves){
 		return s;
 	};
 
-	std::sort(moves.begin(), moves.end(), 
+	std::stable_sort(moves.begin(), moves.end(), 
 		[&](const Move& a, const Move& b){ 
 			return score(a) > score(b); 
 	});
@@ -57,7 +57,7 @@ static bool same_pos(const Position &a, const Position &b){
 	    && memcmp(a.pieces, b.pieces, sizeof(a.pieces)) == 0;
 }
 
-int check_endgame(const Legality& L, const std::vector<Move>& moves){
+int check_endgame(const Legality& L, const std::vector<Move>& moves, const std::vector<Position>& hist){
 	//0 = non finisce, 1 = tie, 2 = checkmate per il colore opposto (!w_to_move)
 
 	if(moves.empty()){
@@ -69,8 +69,9 @@ int check_endgame(const Legality& L, const std::vector<Move>& moves){
 	}
 
 	int contam = 1;
-	for(int i =0;i<record.size()-1; i++){
-		if(same_pos(record[i], record[record.size()-1])){
+
+	for(int i =0;i<hist.size()-1; i++){
+		if(same_pos(hist[i], hist[hist.size()-1])){
 			contam++;
 			if(contam>=3)
 				return TIE;//repetition
@@ -109,8 +110,9 @@ float evaluate_pos(Position& state){
 
 
 constexpr float INF = 1.0e8 + 7;
+constexpr float MATE = 1.0e6 + 7;
 
-float try_moves(int depth, Position state, const Move &mv, float alpha, float beta, int id){
+float try_moves(int depth, Position state, const Move &mv, std::vector<Position>& hist, float alpha, float beta, int id){
 	//std::cout<<depth<<" "<<id<<std::endl;
 	if(id!=0 && (id != search_gen))return 0.0f;//non serve piu
 
@@ -125,16 +127,19 @@ float try_moves(int depth, Position state, const Move &mv, float alpha, float be
 	std::vector<Move>moves;
 	gen_moves(state, hypot_legality, moves);
 
-	state.end_game = check_endgame(hypot_legality, moves);
+	hist.push_back(state);//if all is ok i push back for checking stuff
+
+	state.end_game = check_endgame(hypot_legality, moves, hist);
 	
 
 	float ris=(state.w_to_move)? -INF: INF;//worst case
 	
 	if(state.end_game != NO_ENDG){
-		return (state.end_game == TIE)?0.0f:ris;//checkmate = worst case
+		hist.pop_back();
+		return (state.end_game == TIE)?0.0f:(state.w_to_move)? -(MATE-depth) : (MATE-depth);//checkmate = worst case
 	}
 
-	record.push_back(state);//if all is ok i push back for checking stuff
+	
 
 	//float (*best)(float a, float b);
 	//best = (state.w_to_move)?std::fmaxf:std::fminf;
@@ -149,7 +154,7 @@ float try_moves(int depth, Position state, const Move &mv, float alpha, float be
 		
 		checked = 1;
 
-		float val_move = try_moves(depth+1, state, move, alpha, beta, id);
+		float val_move = try_moves(depth+1, state, move, hist, alpha, beta, id);
 
 		if(state.w_to_move){
 			ris = std::max(ris, val_move);
@@ -160,12 +165,13 @@ float try_moves(int depth, Position state, const Move &mv, float alpha, float be
 			beta = std::min(ris, beta);
 		}
 		//ris = best(ris, val_move);
-		if(alpha>=beta)break;
+		if(alpha>=beta)
+			break;
 	}
 
 	if(!checked)
 		ris = evaluate_pos(state);
-	record.pop_back();
+	hist.pop_back();
 	//state = record[record.size()-1];//sistemo lo stato
 	
 	return ris;
@@ -174,21 +180,22 @@ float try_moves(int depth, Position state, const Move &mv, float alpha, float be
 
 void eval_asyinc(Position& state){
 	int id = ++search_gen;
-	std::thread([state, id]{
+	std::thread([state, id, hist=record] mutable{
 		float alpha = -INF;
 		float beta = INF;
-		float r = try_moves(0, state, emptymv, alpha, beta, id);
+		float r = try_moves(0, state, emptymv, hist, alpha, beta, id);
 		if(id == search_gen)target_eval_val = r;
 		std::cout<<id<<" - "<< search_gen<< " - ris: "<<r<<std::endl;
 	}).detach();
 }
 
 std::atomic<bool> bot_ready{false};
+std::atomic<int> bot_gen;
 Move bot_move;
 
-void do_best_move(const Position& state,const Legality& leg){
+void do_best_move(const Position& state,const Legality& leg, std::vector<Position>&hist, int id){
 	
-	bot_move = emptymv;
+	Move ris = emptymv;
 
 	bool (*better)(float, float) = (!settings[TURN]) 
 		? +[](float a, float b) { return a > b; }   // Maximize (e.g., White)
@@ -206,12 +213,14 @@ void do_best_move(const Position& state,const Legality& leg){
 	float* pivotcheck = (state.w_to_move)? &alpha:&beta;//what to update
 
 	for(Move& move: bot_moves){
-
-		float val_move = try_moves(0, state, move, alpha, beta, 0);
+		if(id != bot_gen)
+			return;
+		
+		float val_move = try_moves(1, state, move, hist, alpha, beta, id);
 
 		if(better(val_move, best)){
 			best = val_move;
-			bot_move = move;
+			ris = move;
 		}
 		if(better(best, *pivotcheck)){
 			*pivotcheck = best;
@@ -219,17 +228,22 @@ void do_best_move(const Position& state,const Legality& leg){
 		//ris = best(ris, val_move);
 		if(alpha>=beta)break;
 	}
-	
-	bot_ready = 1;
+
+	if(id == bot_gen){
+		bot_move = ris;
+		bot_ready = true;
+	}
+
 	
 	//change_turn_bot(state, leg, ris, bot_moves);
 }
 
-void bot_asyinc(void){
-	std::thread([]{
+void bot_asyinc(const Position& state, const Legality &leg){
+	int id = ++bot_gen;
+	std::thread([state, leg, id, hist = record] mutable{
 		bot_ready = false;
 		bot_move = emptymv;
-		do_best_move(currentp, current_legality);
+		do_best_move(state, leg, hist, id);
 	}).detach();
 }
 
@@ -237,21 +251,25 @@ void bot_asyinc(void){
 void eval_bar_draw(){
 	
 	
-	float k = 8;
+	//float k = 8;
 
 	float barheight = chessboardsize;
 	float barwidth = squaresize/2;
 	//lo spostamento dovrebbe essere a livello logaritmico es log(|val|) o boh, comunque su un totale di 100 - 100
-	eval_val += (target_eval_val - eval_val) * eval_speed * GetFrameTime();//si avvicina a target_eval_val
+	// eval_val += (target_eval_val - eval_val) * eval_speed * GetFrameTime();//si avvicina a target_eval_val
 	
-	if(fabs(target_eval_val - eval_val) < 0.05f)
-		eval_val = target_eval_val;
+	// if(fabs(target_eval_val - eval_val) < 0.05f)
+	// 	eval_val = target_eval_val;
 	
-	float barprop;// tra -1 e +1, indica quanto verso un lato va la riga
-	if(fabs(eval_val)>1000.0f)//se è matto praticamente (capisco come gestirlo poi) !!!
-		barprop = (eval_val > 0)? 1.0f:-1.0f;
-	else 
-		barprop = tanh(eval_val / k);
+	// float barprop;// tra -1 e +1, indica quanto verso un lato va la riga
+	// if(fabs(eval_val)>1000.0f)//se è matto praticamente (capisco come gestirlo poi) !!!
+	// 	barprop = (eval_val > 0)? 1.0f:-1.0f;
+	// else 
+		//barprop = tanh(eval_val / k);
+
+	const float k = 5.4f;   // tanh(x/5.4) ≈ curva win% Lichess: +1 pedone 59%, +3 75%, +9 96%
+	eval_val += (tanhf(target_eval_val / k) - eval_val) * (1.0f - expf(-eval_speed * GetFrameTime()));
+	float barprop = eval_val;   // ora è la frazione -1..+1
 	
 	float pixelsplit = (barprop + 1.0f)/2.0f; //praticamente altezza a cui fare sta cosa : la moltiplichi * barheight e hai 
 	

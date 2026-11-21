@@ -176,6 +176,7 @@ void board_reset(void){
 	target_eval_val = 0.0f;
 	eval_val = 0.0f;
 
+	bot_gen = 0;
 }
 
 void board_init(void){
@@ -284,13 +285,13 @@ void change_turn(const Move &new_move){
 	//check for endgame
 	std::vector<Move> moves;
 	gen_moves(currentp, current_legality, moves);
-	currentp.end_game = check_endgame(current_legality, moves);
+	currentp.end_game = check_endgame(current_legality, moves, record);
 
 	if(settings[EVAL]){
 		eval_asyinc(currentp);
 	}
 	if((currentp.w_to_move == !settings[TURN]) && settings[BOT]){
-		bot_asyinc();
+		bot_asyinc(currentp, current_legality);
 	}
 
 }

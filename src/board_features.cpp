@@ -5,6 +5,7 @@
 #include "board_features.h"
 #include "evaluation.h"
 #include "buttons.h"
+#include "buttons_specifics.h"
 
 using namespace std;
 
@@ -38,12 +39,15 @@ void take_back_move(void){
 		eval_asyinc(currentp);
 	}
 	if((currentp.w_to_move == !settings[TURN]) && settings[BOT]){
-		bot_asyinc();
+		bot_asyinc(currentp, current_legality);
 	}
 }
 
 void rematch(void){
-	settings[TURN] = !settings[TURN];
+	
+	turn_button();
+	menu_buttons[TURN].state = !menu_buttons[TURN].state;
+
 	board_reset();
 }
 
@@ -150,6 +154,7 @@ void handle_mouse(void){
 
 	if(bot_ready){
 		change_turn(bot_move);
+		bot_ready = false;
 	}
 
     if(!on_board(mouse_position)){
