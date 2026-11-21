@@ -24,16 +24,21 @@ Font text_font;
 void take_back_move(void){
 	//gestisco anche legality
 	take_back_button.state = 0;
-	if(record.size() == 1){
-		 //starting position
-		search_gen = 1;
-		eval_val = 0.0f;
-		target_eval_val = 0.0f;
-		return;
+	int rep = (settings[BOT])?2:1;
+	for(int i=0;i<rep;i++){
+			
+		if(record.size() == 1){
+			//starting position
+			search_gen = 1;
+			eval_val = 0.0f;
+			target_eval_val = 0.0f;
+			return;
+		}
+		record.pop_back();
+		currentp = record[record.size()-1];
+		current_legality = legality(currentp);
 	}
-	record.pop_back();
-	currentp = record[record.size()-1];
-	current_legality = legality(currentp);
+
 
 	if(settings[EVAL]){
 		eval_asyinc(currentp);
@@ -262,6 +267,11 @@ void draw_features(void){
 
 	//arrows
 	for(auto [start,end]:arrows){
+
+		if(!settings[TURN]){ 
+			start = invert_coord(start); 
+			end = invert_coord(end); 
+		}
 		drawArrow(start,end);
 	}
 

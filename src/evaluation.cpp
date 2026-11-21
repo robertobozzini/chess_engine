@@ -4,12 +4,12 @@
 #include "board_features.h"
 #include "menu_main.h"
 
-int max_depth = 4;
-int max_capture_depth = 7; //10 captures
+int max_depth = 7;
+int max_capture_depth = 10; //10 captures
 
 float eval_val = 0.0f;
 std::atomic<float> target_eval_val{0.0f};
-float eval_speed = 1.0f;
+float eval_speed = 5.0f;
 
 std::atomic<int>search_gen{1};
 
@@ -114,7 +114,8 @@ constexpr float MATE = 1.0e6 + 7;
 
 float try_moves(int depth, Position state, const Move &mv, std::vector<Position>& hist, float alpha, float beta, int id){
 	//std::cout<<depth<<" "<<id<<std::endl;
-	if(id!=0 && (id != search_gen))return 0.0f;//non serve piu
+	if(id!=0 && (id != search_gen))
+		return 0.0f;//non serve piu
 
 	if(mv.flag != NO_MOVE)
 		apply_move(state, mv);
@@ -171,6 +172,7 @@ float try_moves(int depth, Position state, const Move &mv, std::vector<Position>
 
 	if(!checked)
 		ris = evaluate_pos(state);
+		
 	hist.pop_back();
 	//state = record[record.size()-1];//sistemo lo stato
 	
@@ -180,7 +182,7 @@ float try_moves(int depth, Position state, const Move &mv, std::vector<Position>
 
 void eval_asyinc(Position& state){
 	int id = ++search_gen;
-	std::thread([state, id, hist=record] mutable{
+	std::thread([state, id, hist=record]() mutable{
 		float alpha = -INF;
 		float beta = INF;
 		float r = try_moves(0, state, emptymv, hist, alpha, beta, id);
@@ -216,7 +218,7 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 		if(id != bot_gen)
 			return;
 		
-		float val_move = try_moves(1, state, move, hist, alpha, beta, id);
+		float val_move = try_moves(1, state, move, hist, alpha, beta, 0);
 
 		if(better(val_move, best)){
 			best = val_move;
@@ -240,7 +242,7 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 
 void bot_asyinc(const Position& state, const Legality &leg){
 	int id = ++bot_gen;
-	std::thread([state, leg, id, hist = record] mutable{
+	std::thread([state, leg, id, hist = record]() mutable{
 		bot_ready = false;
 		bot_move = emptymv;
 		do_best_move(state, leg, hist, id);
@@ -250,26 +252,22 @@ void bot_asyinc(const Position& state, const Legality &leg){
 
 void eval_bar_draw(){
 	
-	
-	//float k = 8;
+	float k = 8;
 
+	
 	float barheight = chessboardsize;
 	float barwidth = squaresize/2;
 	//lo spostamento dovrebbe essere a livello logaritmico es log(|val|) o boh, comunque su un totale di 100 - 100
-	// eval_val += (target_eval_val - eval_val) * eval_speed * GetFrameTime();//si avvicina a target_eval_val
+	eval_val += (target_eval_val - eval_val) * eval_speed * GetFrameTime();//si avvicina a target_eval_val
 	
-	// if(fabs(target_eval_val - eval_val) < 0.05f)
-	// 	eval_val = target_eval_val;
+	if(fabs(target_eval_val - eval_val) < 0.05f)
+		eval_val = target_eval_val;
 	
-	// float barprop;// tra -1 e +1, indica quanto verso un lato va la riga
-	// if(fabs(eval_val)>1000.0f)//se è matto praticamente (capisco come gestirlo poi) !!!
-	// 	barprop = (eval_val > 0)? 1.0f:-1.0f;
-	// else 
-		//barprop = tanh(eval_val / k);
-
-	const float k = 5.4f;   // tanh(x/5.4) ≈ curva win% Lichess: +1 pedone 59%, +3 75%, +9 96%
-	eval_val += (tanhf(target_eval_val / k) - eval_val) * (1.0f - expf(-eval_speed * GetFrameTime()));
-	float barprop = eval_val;   // ora è la frazione -1..+1
+	float barprop;// tra -1 e +1, indica quanto verso un lato va la riga
+	if(fabs(eval_val)>1000.0f)//se è matto praticamente (capisco come gestirlo poi) !!!
+		barprop = (eval_val > 0)? 1.0f:-1.0f;
+	else 
+		barprop = tanh(eval_val / k);
 	
 	float pixelsplit = (barprop + 1.0f)/2.0f; //praticamente altezza a cui fare sta cosa : la moltiplichi * barheight e hai 
 	
