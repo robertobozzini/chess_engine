@@ -5,9 +5,6 @@ menu:
     rendo bottoni non inutili
 
 game:
-    finisco red squares ecc
-
-    finisco tie by insufficient material
 
     faccio che bot cerca di evitare pareggio -> dovrebbe bastare la pos
 
@@ -22,7 +19,7 @@ game:
     metto suoni
 
     creo e implemento mappe di convenienza per i pezzi:
-        calibro le matrici: evito /100.0f
+        calibro le matrici
         check di game stage
 
     faccio script per provare posizioni (e script per creare posizioni(?) sia random sia non)

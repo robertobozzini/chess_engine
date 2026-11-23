@@ -5,7 +5,7 @@
 #include "menu_main.h"
 #include "search.h"
 
-int max_depth = 5;//7
+int max_depth = 7;//7
 int max_capture_depth = 15; //8 captures after ->15
 
 std::atomic<int>search_gen{0};
@@ -34,7 +34,7 @@ constexpr float MATE = 1.0e6 + 7;
 
 float try_moves(int depth, Position state, const Move &mv, std::vector<Position>& hist, float alpha, float beta, int id){
 	//std::cout<<depth<<" "<<id<<std::endl;
-	if(id!=0 && (id != search_gen))
+	if(id!=search_gen)
 		return 0.0f;//non serve piu
 
 	if(mv.flag != NO_MOVE)
@@ -67,7 +67,7 @@ float try_moves(int depth, Position state, const Move &mv, std::vector<Position>
 	sort_moves(moves);
 	bool checked = 0;
 	for(Move& move: moves){
-		if(id!=0 && (id != search_gen))
+		if(id != search_gen)
 			break;//stop searching
 
 		if((depth>max_depth && move.flag!=CAPTURE))//se sono gia a max_depth e non è cattura ignoro
@@ -107,7 +107,7 @@ void eval_asyinc(Position& state){
 		float beta = INF;
 		float r = try_moves(0, state, emptymv, hist, alpha, beta, id);
 		if(id == search_gen)target_eval_val = r;
-		std::cout<<" eval: "<<id<<" - "<< search_gen<< " - ris: "<<r<<std::endl;
+		//std::cout<<" eval: "<<id<<" - "<< search_gen<< " - ris: "<<r<<std::endl;
 	}).detach();
 }
 
@@ -118,6 +118,7 @@ Move bot_move;
 void do_best_move(const Position& state,const Legality& leg, std::vector<Position>&hist, int id){
 	
 	Move ris = emptymv;
+	//std::cout<<state.w_to_move<<std::endl;
 
 	bool (*better)(float, float) = (!settings[TURN]) 
 		? +[](float a, float b) { return a > b; }//maximize for white
@@ -132,7 +133,7 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 
 	float alpha = -INF;
 	float beta = INF;
-	float* pivot = (state.w_to_move)? &alpha:&beta;//what to update
+	float* pivot = (state.w_to_move)? &alpha:&beta;//what to update //= !settings[TURN]
 
 	for(Move& move: bot_moves){
 		if(id != search_gen)
