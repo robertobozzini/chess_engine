@@ -18,17 +18,13 @@ extern std::atomic<bool> bot_ready;
 extern std::atomic<int> bot_gen;
 extern Move bot_move;
 
+void mtx_init(void);
 //void sort_moves(std::vector<Move>& moves);
 void gen_moves(const Position& state, const Legality& L, std::vector<Move>& moves);
 int check_endgame(const Legality& L, const std::vector<Move>& moves, const std::vector<Position>& hist);
 
 float evaluate_pos(Position& state);
-float try_moves(int depth, Position state, const Move &mv, std::vector<Position>& hist, float alpha, float beta, int id);
 
-void eval_asyinc(Position& state);
-
-void do_best_move(const Position& state,const Legality& leg);
-void bot_asyinc(const Position& state, const Legality &leg);
 
 void eval_bar_draw();
 #endif

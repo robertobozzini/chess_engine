@@ -4,30 +4,10 @@
 #include "board_features.h"
 #include "menu_main.h"
 
-int max_depth = 7;
-int max_capture_depth = 10; //10 captures
 
 float eval_val = 0.0f;
 std::atomic<float> target_eval_val{0.0f};
 float eval_speed = 5.0f;
-
-std::atomic<int>search_gen{1};
-
-void sort_moves(std::vector<Move>& moves){
-	//for alpha beta pruning
-	auto score = [](const Move& mv){
-		float s = 0.0f;
-		if(mv.captured != EMPTY) s += 100.0f + 10.0f*piece_value[mv.captured] - piece_value[mv.piece]; // vittima grossa, attaccante piccolo
-		if(mv.promo    != EMPTY) s += 80.0f + piece_value[mv.promo];
-		return s;
-	};
-
-	std::stable_sort(moves.begin(), moves.end(), 
-		[&](const Move& a, const Move& b){ 
-			return score(a) > score(b); 
-	});
-	return;
-}
 
 void gen_moves(const Position& state, const Legality& L, std::vector<Move>& moves){
 	bool turn = state.w_to_move;
@@ -49,13 +29,35 @@ void gen_moves(const Position& state, const Legality& L, std::vector<Move>& move
 					moves.push_back(move);
 			}
 		}
-	}
-	
+	}	
 }
+
 static bool same_pos(const Position &a, const Position &b){
 	return a.w_to_move == b.w_to_move && a.castling == b.castling
 	    && memcmp(a.pieces, b.pieces, sizeof(a.pieces)) == 0;
 }
+
+const uint64_t LIGHT = 0x55AA55AA55AA55AAULL;//light squares
+
+bool insufficient_material(const Position &state){
+	for(int c = 0; c < 2; c++)
+		if(state.pieces[c][PAWN] | state.pieces[c][ROOK] | state.pieces[c][QUEEN]) return false;
+	
+	uint64_t N = state.pieces[0][KNIGHT] | state.pieces[1][KNIGHT];
+	uint64_t B = state.pieces[0][BISHOP] | state.pieces[1][BISHOP];
+
+	int minors = __builtin_popcountll(N | B);
+	if(minors <= 1) return true;
+
+	if(!N && state.pieces[0][BISHOP] && state.pieces[1][BISHOP] && minors == 2){
+		return !!(state.pieces[0][BISHOP] & LIGHT) == !!(state.pieces[1][BISHOP] & LIGHT);//!! so that it becomes a bool: bishops on same color
+	}
+	//to add 2 bishops of same color 
+
+
+	return false;
+}
+
 
 int check_endgame(const Legality& L, const std::vector<Move>& moves, const std::vector<Position>& hist){
 	//0 = non finisce, 1 = tie, 2 = checkmate per il colore opposto (!w_to_move)
@@ -78,9 +80,175 @@ int check_endgame(const Legality& L, const std::vector<Move>& moves, const std::
 		}
 			
 	}
+	//tie by insufficient material:
+	//hist[hist.size()-1] is current
+	if(insufficient_material(hist[hist.size()-1]))
+		return TIE;
+
 	return NO_ENDG;
 
 }
+
+enum GAME_STAGE: int{
+    MID_GAME, END_GAME
+};
+
+using Mtx8x8 = std::array<std::array<float, 8>, 8>;;//colonna, riga
+
+Mtx8x8 pawn_mtx_mg={{
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	13, 	15,		15,		13,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0}
+}};
+
+Mtx8x8 pawn_mtx_eg={{
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	13, 	15,		15,		13,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0}
+}};
+
+Mtx8x8 knight={{
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	13, 	15,		15,		13,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0}
+}};
+
+Mtx8x8 bishop={{
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	13, 	15,		15,		13,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0}
+}};
+
+Mtx8x8 rook_mg={{
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	13, 	15,		15,		13,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0}
+}};
+
+Mtx8x8 rook_eg={{
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	13, 	15,		15,		13,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0}
+}};
+
+Mtx8x8 queen_mg={{
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	13, 	15,		15,		13,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0}
+}};
+
+
+Mtx8x8 queen_eg={{
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	13, 	15,		15,		13,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0}
+}};
+
+Mtx8x8 king_mg={{
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	13, 	15,		15,		13,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0}
+}};
+
+Mtx8x8 king_eg={{
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	13, 	15,		15,		13,		0,		0},
+	{10, 	10, 	10, 	10,		10,		10,		10,		10},
+	{0, 	0,  	 0, 	0,		0,		0,		0,		0}
+}};
+/*
+Mtx8x8 invert_mtx(Mtx8x8 mtx){//mtxs are for white, for black i have to invert it
+	Mtx8x8 newmtx;
+	for(int i=0; i<8; i++){
+		for(int j=0; j<8; j++){
+			newmtx[i][j] = mtx[7-i][7-j];
+		}
+	}
+	return newmtx;
+}
+	*/
+std::array<std::array<Mtx8x8,2>,6>pos_mtx;//da gestire anche conversione mid game - end game
+
+void mtx_init(void){
+	for(uint8_t piece = PAWN; piece<=KING; piece++){
+
+		Mtx8x8* mtx_mg = &pos_mtx[piece][MID_GAME];
+		Mtx8x8* mtx_eg = &pos_mtx[piece][END_GAME];
+
+		switch (piece){
+			case PAWN:
+				*mtx_mg = pawn_mtx_mg;
+				*mtx_eg = pawn_mtx_eg;
+			case KNIGHT:
+				*mtx_mg = knight;
+				*mtx_eg = knight;
+			case BISHOP:
+				*mtx_mg = bishop;
+				*mtx_eg = bishop;
+			case ROOK:
+				*mtx_mg = rook_mg;
+				*mtx_eg = rook_eg;
+			case QUEEN:
+				*mtx_mg = queen_mg;
+				*mtx_eg = queen_eg;
+			case KING:
+				*mtx_mg = king_mg;
+				*mtx_eg = king_eg;
+		}
+		// pos_mtx[0][piece][MID_GAME] = invert_mtx(pos_mtx[1][piece][MID_GAME]);
+		// pos_mtx[0][piece][END_GAME] = invert_mtx(pos_mtx[1][piece][END_GAME]);
+	}
+}
+
 
 float evaluate_pos(Position& state){
 	
@@ -88,166 +256,37 @@ float evaluate_pos(Position& state){
 	int sq;//per ora è solo valori: poi anche valori in base alla posizione
 	//MAPPE DI CONVENIENZA -> devo capire come farle (? da file forse)
 	float val;
+
+	bool game_stage = 0;//per ora lasciamo cosi
+
     for(uint8_t piece = PAWN; piece<=KING; piece++){
 		uint64_t board = state.pieces[0][piece];
         while(board){
             val =piece_value[piece];
+
             sq = pop_lsb(board);
+			Vector2 pos=sq_to_coord(sq);
+			pos = invert_coord(pos);
+			val +=pos_mtx[piece][game_stage][pos.x][pos.y]/100.0f;//position value
 
 			ris -= val;
         }
 		board = state.pieces[1][piece];
         while(board){
             val=piece_value[piece];
+
             sq = pop_lsb(board);
+			Vector2 pos=sq_to_coord(sq);
+			val +=pos_mtx[piece][game_stage][pos.x][pos.y]/100.0f;//position value
 
 			ris+=val;
         }
 	}
-
+	std::cout<<ris<<std::endl;
     return ris;
 }
 
 
-constexpr float INF = 1.0e8 + 7;
-constexpr float MATE = 1.0e6 + 7;
-
-float try_moves(int depth, Position state, const Move &mv, std::vector<Position>& hist, float alpha, float beta, int id){
-	//std::cout<<depth<<" "<<id<<std::endl;
-	if(id!=0 && (id != search_gen))
-		return 0.0f;//non serve piu
-
-	if(mv.flag != NO_MOVE)
-		apply_move(state, mv);
-
-	if((depth>=max_depth && mv.flag!=CAPTURE) || depth>= max_capture_depth){
-		return evaluate_pos(state);
-	}
-
-	Legality hypot_legality = legality(state);//hypotethical
-	std::vector<Move>moves;
-	gen_moves(state, hypot_legality, moves);
-
-	hist.push_back(state);//if all is ok i push back for checking stuff
-
-	state.end_game = check_endgame(hypot_legality, moves, hist);
-	
-
-	float ris=(state.w_to_move)? -INF: INF;//worst case
-	
-	if(state.end_game != NO_ENDG){
-		hist.pop_back();
-		return (state.end_game == TIE)?0.0f:(state.w_to_move)? -(MATE-depth) : (MATE-depth);//checkmate = worst case
-	}
-
-	
-
-	//float (*best)(float a, float b);
-	//best = (state.w_to_move)?std::fmaxf:std::fminf;
-	sort_moves(moves);
-	bool checked = 0;
-	for(Move& move: moves){
-		if(id!=0 && (id != search_gen))
-			break;//stop searching
-
-		if((depth>max_depth && move.flag!=CAPTURE))//se sono gia a max_depth e non è cattura ignoro
-			continue;
-		
-		checked = 1;
-
-		float val_move = try_moves(depth+1, state, move, hist, alpha, beta, id);
-
-		if(state.w_to_move){
-			ris = std::max(ris, val_move);
-			alpha = std::max(ris, alpha);
-		}
-		else {
-			ris = std::min(ris, val_move);
-			beta = std::min(ris, beta);
-		}
-		//ris = best(ris, val_move);
-		if(alpha>=beta)
-			break;
-	}
-
-	if(!checked)
-		ris = evaluate_pos(state);
-		
-	hist.pop_back();
-	//state = record[record.size()-1];//sistemo lo stato
-	
-	return ris;
-
-}
-
-void eval_asyinc(Position& state){
-	int id = ++search_gen;
-	std::thread([state, id, hist=record]() mutable{
-		float alpha = -INF;
-		float beta = INF;
-		float r = try_moves(0, state, emptymv, hist, alpha, beta, id);
-		if(id == search_gen)target_eval_val = r;
-		std::cout<<id<<" - "<< search_gen<< " - ris: "<<r<<std::endl;
-	}).detach();
-}
-
-std::atomic<bool> bot_ready{false};
-std::atomic<int> bot_gen;
-Move bot_move;
-
-void do_best_move(const Position& state,const Legality& leg, std::vector<Position>&hist, int id){
-	
-	Move ris = emptymv;
-
-	bool (*better)(float, float) = (!settings[TURN]) 
-		? +[](float a, float b) { return a > b; }   // Maximize (e.g., White)
-		: +[](float a, float b) { return a < b; };  // Minimize (e.g., Black)
-
-	std::vector<Move>bot_moves;
-	gen_moves(state, leg, bot_moves);
-	sort_moves(bot_moves);
-
-	float best;
-	best = (state.w_to_move)? -INF:INF;
-
-	float alpha = -INF;
-	float beta = INF;
-	float* pivotcheck = (state.w_to_move)? &alpha:&beta;//what to update
-
-	for(Move& move: bot_moves){
-		if(id != bot_gen)
-			return;
-		
-		float val_move = try_moves(1, state, move, hist, alpha, beta, 0);
-
-		if(better(val_move, best)){
-			best = val_move;
-			ris = move;
-		}
-		if(better(best, *pivotcheck)){
-			*pivotcheck = best;
-		}
-		//ris = best(ris, val_move);
-		if(alpha>=beta)break;
-	}
-
-	if(id == bot_gen){
-		bot_move = ris;
-		bot_ready = true;
-	}
-
-	
-	//change_turn_bot(state, leg, ris, bot_moves);
-}
-
-void bot_asyinc(const Position& state, const Legality &leg){
-	int id = ++bot_gen;
-	std::thread([state, leg, id, hist = record]() mutable{
-		bot_ready = false;
-		bot_move = emptymv;
-		do_best_move(state, leg, hist, id);
-	}).detach();
-}
 
 
 void eval_bar_draw(){

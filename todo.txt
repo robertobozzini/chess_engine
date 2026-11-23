@@ -5,29 +5,24 @@ menu:
     rendo bottoni non inutili
 
 game:
-    sistemo eval_bar
+    finisco tie by insufficient material
 
-    sistemare a volte eval da -1 a random
-
-    SISTEMO SCELTA DI MOSSA E SORTING -> no solo catture si guardo meglio avanti (??non so perche non vada)
-
-    sistemo warning
-
-    sistemo bot
+    faccio che bot cerca di evitare pareggio
 
     ricontrollo: polish e end_game e gestione record per bot
-
-    tie by insufficient material
 
     conteggio di pezzi (puro)
 
     metto suoni
 
-    creo e implemento mappe di convenienza per i pezzi
-
-    faccio ricerca in profondità -> metto cambio turno per il bot (non inquina currentp)
+    creo e implemento mappe di convenienza per i pezzi:
+        bilancio
+        sistemo game stage
 
     faccio script per provare posizioni (e script per creare posizioni(?) sia random sia non)
+
+    implemento aperture
+    
 
 
 

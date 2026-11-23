@@ -5,6 +5,8 @@
 #include "pieces.h"
 #include "evaluation.h"
 #include "buttons.h"
+#include "search.h"
+
 
 using namespace std;
 
@@ -212,6 +214,8 @@ void board_init(void){
 	board_reset();
 
 	emptymv.flag = NO_MOVE;
+
+	mtx_init();
 }
 
 Move mv;
@@ -227,7 +231,7 @@ Move build_move(const Position &s, int from, int to){
 	if(double_push) flag = DOUBLE_PUSH;
 	else if(diag_to_empty){ flag = EN_PASSANT; captured = PAWN; }
 	else if(castle) flag = CASTLE;
-	else if(captured) flag = CAPTURE;
+	else if(captured!=EMPTY) flag = CAPTURE;
 	// if(promotion){
 	// 	choosing = 1;
 	// }
@@ -287,11 +291,11 @@ void change_turn(const Move &new_move){
 	gen_moves(currentp, current_legality, moves);
 	currentp.end_game = check_endgame(current_legality, moves, record);
 
-	if(settings[EVAL]){
-		eval_asyinc(currentp);
-	}
 	if((currentp.w_to_move == !settings[TURN]) && settings[BOT]){
 		bot_asyinc(currentp, current_legality);
+	}
+	else if(settings[EVAL]){
+		eval_asyinc(currentp);
 	}
 
 }

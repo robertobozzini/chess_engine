@@ -6,6 +6,8 @@
 #include "evaluation.h"
 #include "buttons.h"
 #include "buttons_specifics.h"
+#include "search.h"
+
 
 using namespace std;
 
@@ -40,11 +42,13 @@ void take_back_move(void){
 	}
 
 
-	if(settings[EVAL]){
-		eval_asyinc(currentp);
-	}
+
 	if((currentp.w_to_move == !settings[TURN]) && settings[BOT]){
 		bot_asyinc(currentp, current_legality);
+
+	}
+	else if(settings[EVAL]){
+		eval_asyinc(currentp);
 	}
 }
 
@@ -91,6 +95,8 @@ void handle_turn(int sq){
 	
 	if((currentp.w_to_move == !settings[TURN]) && settings[BOT])//bots turn
 	{
+		if(record.size()==1)
+			bot_asyinc(currentp, current_legality);
 		return;
 	}
 

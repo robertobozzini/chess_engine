@@ -19,7 +19,10 @@ void att_tables_init(void);
 
 extern uint64_t between[64][64], line[64][64];
 
-struct Legality { int ksq; uint64_t checkers, pinned, check_mask; };
+struct Legality { 
+    int ksq; 
+    uint64_t checkers, pinned, check_mask; 
+};
 
 extern Legality current_legality;
 Legality legality(const Position &state);

@@ -21,6 +21,7 @@ struct Move {
     int from, to; 
     uint8_t piece, captured, promo, flag; 
 }; // captured/promo = EMPTY se assenti
+
 enum MoveFlag : uint8_t { NORMAL, DOUBLE_PUSH, EN_PASSANT, CASTLE, CAPTURE, NO_MOVE };
 
 struct Position {
