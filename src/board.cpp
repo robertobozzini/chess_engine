@@ -165,6 +165,7 @@ void board_reset(void){
 	held_piece = EMPTY;
 	held_piece_sq = NO_SQ;
 	arrows.clear();
+	red_squares = 0ULL;
 
 	current_legality = legality(currentp);
 	choosing = 0;
@@ -174,11 +175,10 @@ void board_reset(void){
 	lobby_button.state = 0;
 	restart_button.state = 0;
 	
-	search_gen = 1;
+	search_gen = 0;
 	target_eval_val = 0.0f;
 	eval_val = 0.0f;
 
-	bot_gen = 0;
 }
 
 void board_init(void){
@@ -283,6 +283,7 @@ void change_turn(const Move &new_move){
 	apply_move(currentp, new_move);
 	record.push_back(currentp);
 	arrows.clear();
+	red_squares = 0ULL;
 
 	current_legality = legality(currentp);//aggiorno la legalità
 

@@ -5,19 +5,25 @@ menu:
     rendo bottoni non inutili
 
 game:
+    finisco red squares ecc
+
     finisco tie by insufficient material
 
-    faccio che bot cerca di evitare pareggio
+    faccio che bot cerca di evitare pareggio -> dovrebbe bastare la pos
+
+    eval_bar: metto numero effettivo in mezzo
+
+    metto conteggio pezzi generale in game: array[2][6]: per ogni colore quanti e quali pezzi hanno catturato
+
+    rappresentazione grafica di conteggio pezzi
 
     ricontrollo: polish e end_game e gestione record per bot
-
-    conteggio di pezzi (puro)
 
     metto suoni
 
     creo e implemento mappe di convenienza per i pezzi:
-        bilancio
-        sistemo game stage
+        calibro le matrici: evito /100.0f
+        check di game stage
 
     faccio script per provare posizioni (e script per creare posizioni(?) sia random sia non)
 

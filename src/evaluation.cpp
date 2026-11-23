@@ -51,8 +51,9 @@ bool insufficient_material(const Position &state){
 
 	if(!N && state.pieces[0][BISHOP] && state.pieces[1][BISHOP] && minors == 2){
 		return !!(state.pieces[0][BISHOP] & LIGHT) == !!(state.pieces[1][BISHOP] & LIGHT);//!! so that it becomes a bool: bishops on same color
-	}
-	//to add 2 bishops of same color 
+	}//1 B vs 1 B of same color
+	
+	//to add other cases
 
 
 	return false;
@@ -249,6 +250,15 @@ void mtx_init(void){
 	}
 }
 
+int max_npieces = 32;
+
+float pos_value(int npieces, float mid_game, float end_game){//media pesata
+
+	float start_weight = (float)npieces;
+	float end_wheight = ((float)max_npieces - (float)npieces);
+	
+	return ((mid_game)*start_weight + (end_game)*end_wheight)/(float)max_npieces;
+}
 
 float evaluate_pos(Position& state){
 	
@@ -256,8 +266,10 @@ float evaluate_pos(Position& state){
 	int sq;//per ora è solo valori: poi anche valori in base alla posizione
 	//MAPPE DI CONVENIENZA -> devo capire come farle (? da file forse)
 	float val;
-
-	bool game_stage = 0;//per ora lasciamo cosi
+	float val_pos;
+	//conversion mid game -> end game idea:
+	float mid_game, end_game;
+	int npieces = __builtin_popcountll(state.all);
 
     for(uint8_t piece = PAWN; piece<=KING; piece++){
 		uint64_t board = state.pieces[0][piece];
@@ -267,7 +279,11 @@ float evaluate_pos(Position& state){
             sq = pop_lsb(board);
 			Vector2 pos=sq_to_coord(sq);
 			pos = invert_coord(pos);
-			val +=pos_mtx[piece][game_stage][pos.x][pos.y]/100.0f;//position value
+
+			mid_game = pos_mtx[piece][MID_GAME][pos.x][pos.y]/100.0f;
+			end_game = pos_mtx[piece][END_GAME][pos.x][pos.y]/100.0f;
+			val_pos = pos_value(npieces, mid_game, end_game);
+			val += val_pos;//position value
 
 			ris -= val;
         }
@@ -277,7 +293,11 @@ float evaluate_pos(Position& state){
 
             sq = pop_lsb(board);
 			Vector2 pos=sq_to_coord(sq);
-			val +=pos_mtx[piece][game_stage][pos.x][pos.y]/100.0f;//position value
+
+			mid_game = pos_mtx[piece][MID_GAME][pos.x][pos.y]/100.0f;
+			end_game = pos_mtx[piece][END_GAME][pos.x][pos.y]/100.0f;
+			val_pos = pos_value(npieces, mid_game, end_game);
+			val += val_pos;//position value
 
 			ris+=val;
         }

@@ -14,8 +14,10 @@ using namespace std;
 uint8_t held_piece;// = EMPTY;//empty
 int held_piece_sq;// = NO_SQ;
 Vector2 st_arrow_pos = (Vector2){-1,-1};
-vector<pair<Vector2,Vector2>>arrows;
+set<pair<Vector2,Vector2>>arrows;
 float scale_arrow_width = 0.15f;
+
+uint64_t red_squares;
 
 Button take_back_button;
 Button restart_button;
@@ -31,7 +33,7 @@ void take_back_move(void){
 			
 		if(record.size() == 1){
 			//starting position
-			search_gen = 1;
+			search_gen = 0;
 			eval_val = 0.0f;
 			target_eval_val = 0.0f;
 			return;
@@ -132,7 +134,10 @@ void handle_turn(int sq){
 		//tolgo pezzo dalla board
     }
 	else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && held_piece != EMPTY){
-
+		if(held_piece_sq == sq){
+			red_squares = 0ULL;
+			arrows.clear();
+		}
 		u_int64_t legal_moves = find_moves(currentp, current_legality, held_piece, held_piece_sq);
 		bool legal_move = is_occ(legal_moves, sq);
 		
@@ -171,12 +176,13 @@ void handle_mouse(void){
     if(!on_board(mouse_position)){
 
 		if(held_piece!=EMPTY){
-			held_piece=EMPTY;
+			held_piece = EMPTY;
 			held_piece_sq = NO_SQ;
 		}
 
-		if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
+		if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) || IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
 			arrows.clear();
+			red_squares = 0ULL;
 		}
 		return;
 	}
@@ -190,15 +196,32 @@ void handle_mouse(void){
 
 
 	//arrows
+	if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+		arrows.clear();
+		red_squares=0ULL;
+	}
+
     if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
         st_arrow_pos = board_pos;
 
     }
     else if(IsMouseButtonReleased(MOUSE_BUTTON_RIGHT) && st_arrow_pos.x !=-1){
-        if(st_arrow_pos != board_pos)
-            arrows.push_back({st_arrow_pos,board_pos});
-        else 
-			arrows.clear();
+        if(st_arrow_pos != board_pos){
+			//try to find if already in
+			if(arrows.find({st_arrow_pos,board_pos}) != arrows.end())
+				arrows.erase({st_arrow_pos,board_pos});
+			else
+				arrows.insert({st_arrow_pos,board_pos});
+		}
+        else {
+			//red square
+			if(is_occ(red_squares, sq))
+				clear_bit(red_squares, sq);
+			else
+				set_bit(red_squares, sq);
+		}
+		
+			
         st_arrow_pos=(Vector2){-1,-1};
     }
 
@@ -270,6 +293,21 @@ void draw_attack_table(uint64_t table){
 }
 
 void draw_features(void){
+
+	//red squares
+	uint64_t tmp_red_sq = red_squares;
+	while(tmp_red_sq){
+		int sq = pop_lsb(tmp_red_sq);
+		Vector2 pos = sq_to_coord(sq);
+
+		if(!settings[TURN])
+			pos = invert_coord(pos);
+					
+		int top=corner.y+pos.y*squaresize;
+		int left=corner.x+pos.x*squaresize;
+		DrawRectangle(left, top, squaresize, squaresize, Fade(MAROON, 0.7f));
+		
+	}
 
 	//arrows
 	for(auto [start,end]:arrows){

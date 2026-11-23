@@ -3,11 +3,14 @@
 
 #include "main.h"
 #include <cstdint>
+#include <set>
 #include "buttons.h"
 
 extern uint8_t held_piece;
 extern int held_piece_sq;
-extern std::vector<std::pair<Vector2,Vector2>>arrows;
+extern std::set<std::pair<Vector2,Vector2>>arrows;
+
+extern uint64_t red_squares;
 
 extern Font board_font;
 extern Font text_font;

@@ -5,10 +5,10 @@
 #include "menu_main.h"
 #include "search.h"
 
-int max_depth = 3;//7
-int max_capture_depth = 6; //8 captures after ->15
+int max_depth = 5;//7
+int max_capture_depth = 15; //8 captures after ->15
 
-std::atomic<int>search_gen{1};
+std::atomic<int>search_gen{0};
 
 
 
@@ -107,7 +107,7 @@ void eval_asyinc(Position& state){
 		float beta = INF;
 		float r = try_moves(0, state, emptymv, hist, alpha, beta, id);
 		if(id == search_gen)target_eval_val = r;
-		std::cout<<id<<" - "<< search_gen<< " - ris: "<<r<<std::endl;
+		std::cout<<" eval: "<<id<<" - "<< search_gen<< " - ris: "<<r<<std::endl;
 	}).detach();
 }
 
@@ -135,10 +135,10 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 	float* pivot = (state.w_to_move)? &alpha:&beta;//what to update
 
 	for(Move& move: bot_moves){
-		if(id != bot_gen)
+		if(id != search_gen)
 			return;
 		
-		float val_move = try_moves(1, state, move, hist, alpha, beta, 0);
+		float val_move = try_moves(1, state, move, hist, alpha, beta, id);//i use search gen to stop it all toghether and not divide search gen - bot gen
 
 		if(better(val_move, best)){
 			best = val_move;
@@ -151,7 +151,7 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 		if(alpha>=beta)break;
 	}
 
-	if(id == bot_gen){
+	if(id == search_gen){
 		bot_move = ris;
 		bot_ready = true;
 
@@ -164,10 +164,11 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 }
 
 void bot_asyinc(const Position& state, const Legality &leg){
-	int id = ++bot_gen;
+	int id = ++search_gen;
 	std::thread([state, leg, id, hist = record]() mutable{
 		bot_ready = false;
 		bot_move = emptymv;
+		
 		do_best_move(state, leg, hist, id);
 	}).detach();
 }
