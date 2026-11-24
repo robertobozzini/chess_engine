@@ -305,7 +305,7 @@ void draw_features(void){
 					
 		int top=corner.y+pos.y*squaresize;
 		int left=corner.x+pos.x*squaresize;
-		DrawRectangle(left, top, squaresize, squaresize, Fade(MAROON, 0.7f));
+		DrawRectangle(left, top, squaresize, squaresize, Fade(MAROON, 0.45f));
 		
 	}
 

@@ -5,8 +5,8 @@
 #include "menu_main.h"
 #include "search.h"
 
-int max_depth = 7;//7
-int max_capture_depth = 15; //8 captures after ->15
+constexpr int max_depth = 6; //max search depth (half turns)
+const int max_capture_depth = 2*max_depth; //max depth of all captures (including the normal depth)
 
 std::atomic<int>search_gen{0};
 
@@ -17,11 +17,12 @@ void sort_moves(std::vector<Move>& moves){
 	auto score = [](const Move& mv){
 		float s = 0.0f;
 		if(mv.captured != EMPTY) s += 100.0f + 10.0f*piece_value[mv.captured] - piece_value[mv.piece]; // vittima grossa, attaccante piccolo
-		if(mv.promo    != EMPTY) s += 80.0f + piece_value[mv.promo];
+		if(mv.promo != EMPTY) s += 80.0f + piece_value[mv.promo];
+		if(mv.flag == CASTLE) s += 50.0f;
 		return s;
 	};
 
-	std::stable_sort(moves.begin(), moves.end(), 
+	std::sort(moves.begin(), moves.end(), //not stable_sort: gives a bit of a random twist
 		[&](const Move& a, const Move& b){ 
 			return score(a) > score(b); 
 	});
@@ -153,6 +154,7 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 	}
 
 	if(id == search_gen){
+		//std::cout<<"ris from this move: "<<best<<std::endl;
 		bot_move = ris;
 		bot_ready = true;
 

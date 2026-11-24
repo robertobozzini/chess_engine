@@ -97,17 +97,17 @@ Mtx8x8 pawn_mtx_mg={{
 	{0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f},
 	{0.50f, 	0.50f, 	0.50f, 	0.50f, 	0.50f, 	0.50f, 	0.50f, 	0.50f},
 	{0.10f, 	0.10f, 	0.20f, 	0.30f, 	0.30f, 	0.20f, 	0.10f, 	0.10f},
-	{0.05f, 	0.05f, 	0.10f, 	0.25f, 	0.25f, 	0.10f, 	0.05f, 	0.05f},
-	{0.00f, 	0.00f, 	0.00f, 	0.20f, 	0.20f, 	0.00f, 	0.00f, 	0.00f},
-	{0.05f, 	-0.05f, 	-0.10f, 	0.00f, 	0.00f, 	-0.10f, 	-0.05f, 	0.05f},
-	{0.05f, 	0.10f, 	0.10f, 	-0.20f, 	-0.20f, 	0.10f, 	0.10f, 	0.05f},
+	{0.05f, 	0.05f, 	0.15f, 	0.25f, 	0.25f, 	0.15f, 	0.05f, 	0.05f},
+	{0.00f, 	0.00f, 	0.10f, 	0.20f, 	0.20f, 	0.10f, 	0.00f, 	0.00f},
+	{0.05f, 	-0.05f, -0.05f,  0.10f, 0.10f, 	-0.05f, -0.05f, 0.05f},
+	{0.05f, 	0.10f, 	0.00f, 	-0.20f, -0.20f, 0.00f, 	0.10f, 	0.05f},
 	{0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f}
 }};
 
 Mtx8x8 pawn_mtx_eg={{
 	{0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f},
-	{1.00f, 	1.00f, 	1.00f, 	1.00f, 	1.00f, 	1.00f, 	1.00f, 	1.00f},
-	{0.60f, 	0.60f, 	0.60f, 	0.60f, 	0.60f, 	0.60f, 	0.60f, 	0.60f},
+	{0.65f, 	0.65f, 	0.65f, 	0.65f, 	0.65f, 	0.65f, 	0.65f, 	0.65f},
+	{0.50f, 	0.50f, 	0.50f, 	0.50f, 	0.50f, 	0.50f, 	0.50f, 	0.50f},
 	{0.35f, 	0.35f, 	0.35f, 	0.35f, 	0.35f, 	0.35f, 	0.35f, 	0.35f},
 	{0.20f, 	0.20f, 	0.20f, 	0.20f, 	0.20f, 	0.20f, 	0.20f, 	0.20f},
 	{0.10f, 	0.10f, 	0.10f, 	0.10f, 	0.10f, 	0.10f, 	0.10f, 	0.10f},
@@ -134,7 +134,7 @@ Mtx8x8 bishop={{
 	{-0.10f, 	0.00f, 	0.10f, 	0.10f, 	0.10f, 	0.10f, 	0.00f, 	-0.10f},
 	{-0.10f, 	0.10f, 	0.10f, 	0.10f, 	0.10f, 	0.10f, 	0.10f, 	-0.10f},
 	{-0.10f, 	0.05f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.05f, 	-0.10f},
-	{-0.20f, 	-0.10f, 	-0.10f, 	-0.10f, 	-0.10f, 	-0.10f, 	-0.10f, 	-0.20f}
+	{-0.20f, 	-0.10f, 	-0.20f, 	-0.10f, 	-0.10f, 	-0.20f, 	-0.10f, 	-0.20f}
 }};
 
 Mtx8x8 rook_mg={{
@@ -160,25 +160,25 @@ Mtx8x8 rook_eg={{
 }};
 
 Mtx8x8 queen_mg={{
-	{-0.20f, 	-0.10f, 	-0.10f, 	-0.05f, 	-0.05f, 	-0.10f, 	-0.10f, 	-0.20f},
+	{-0.20f, 	-0.10f, -0.10f, -0.05f, -0.05f, -0.10f, -0.10f, -0.20f},
 	{-0.10f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	-0.10f},
 	{-0.10f, 	0.00f, 	0.05f, 	0.05f, 	0.05f, 	0.05f, 	0.00f, 	-0.10f},
 	{-0.05f, 	0.00f, 	0.05f, 	0.05f, 	0.05f, 	0.05f, 	0.00f, 	-0.05f},
-	{-0.05f, 	0.00f, 	0.05f, 	0.05f, 	0.05f, 	0.05f, 	0.00f, 	-0.05f},
 	{-0.10f, 	0.00f, 	0.05f, 	0.05f, 	0.05f, 	0.05f, 	0.00f, 	-0.10f},
+	{-0.15f, 	0.00f, 	0.05f, 	0.05f, 	0.05f, 	0.05f, 	0.00f, 	-0.15f},
 	{-0.10f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	-0.10f},
-	{-0.20f, 	-0.10f, 	-0.10f, 	-0.05f, 	-0.05f, 	-0.10f, 	-0.10f, 	-0.20f}
+	{-0.25f, 	-0.15f, -0.10f, -0.05f, -0.05f, -0.10f, -0.15f,	-0.25f}
 }};
 
 Mtx8x8 queen_eg={{
-	{-0.20f, 	-0.10f, 	-0.10f, 	-0.05f, 	-0.05f, 	-0.10f, 	-0.10f, 	-0.20f},
+	{-0.20f, 	-0.10f, -0.10f, -0.05f, -0.05f, -0.10f, -0.10f, -0.20f},
 	{-0.10f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	-0.10f},
 	{-0.10f, 	0.00f, 	0.05f, 	0.05f, 	0.05f, 	0.05f, 	0.00f, 	-0.10f},
 	{-0.05f, 	0.00f, 	0.05f, 	0.05f, 	0.05f, 	0.05f, 	0.00f, 	-0.05f},
 	{-0.05f, 	0.00f, 	0.05f, 	0.05f, 	0.05f, 	0.05f, 	0.00f, 	-0.05f},
-	{-0.10f, 	0.00f, 	0.05f, 	0.05f, 	0.05f, 	0.05f, 	0.00f, 	-0.10f},
+	{-0.05f, 	0.00f, 	0.05f, 	0.05f, 	0.05f, 	0.05f, 	0.00f, 	-0.05f},
 	{-0.10f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	-0.10f},
-	{-0.20f, 	-0.10f, 	-0.10f, 	-0.05f, 	-0.05f, 	-0.10f, 	-0.10f, 	-0.20f}
+	{-0.15f, 	-0.10f, -0.10f, -0.05f, -0.05f, -0.10f, -0.10f,	-0.15f}
 }};
 
 Mtx8x8 king_mg={{
@@ -188,19 +188,19 @@ Mtx8x8 king_mg={{
 	{-0.30f, 	-0.40f, 	-0.40f, 	-0.50f, 	-0.50f, 	-0.40f, 	-0.40f, 	-0.30f},
 	{-0.20f, 	-0.30f, 	-0.30f, 	-0.40f, 	-0.40f, 	-0.30f, 	-0.30f, 	-0.20f},
 	{-0.10f, 	-0.20f, 	-0.20f, 	-0.20f, 	-0.20f, 	-0.20f, 	-0.20f, 	-0.10f},
-	{0.20f, 	0.20f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	0.20f, 	0.20f},
-	{0.20f, 	0.30f, 	0.10f, 	0.00f, 	0.00f, 	0.10f, 	0.30f, 	0.20f}
+	{0.20f, 	0.20f,		-0.10f, 	-0.20f, 	-0.20f, 	-0.10f, 	0.20f, 		0.20f},
+	{0.10f, 	0.40f, 		0.20f, 		-0.10f, 	0.00f, 		-0.10f, 	0.60f, 		0.30f}
 }};
 
 Mtx8x8 king_eg={{
-	{-0.50f, 	-0.40f, 	-0.30f, 	-0.20f, 	-0.20f, 	-0.30f, 	-0.40f, 	-0.50f},
-	{-0.30f, 	-0.20f, 	-0.10f, 	0.00f, 	0.00f, 	-0.10f, 	-0.20f, 	-0.30f},
+	{-0.50f, 	-0.40f, 	-0.30f, -0.20f, -0.20f, -0.30f, -0.40f, 	-0.50f},
+	{-0.30f, 	-0.20f, 	-0.10f, 0.00f, 	0.00f, 	-0.10f, -0.20f, 	-0.30f},
 	{-0.30f, 	-0.10f, 	0.20f, 	0.30f, 	0.30f, 	0.20f, 	-0.10f, 	-0.30f},
 	{-0.30f, 	-0.10f, 	0.30f, 	0.40f, 	0.40f, 	0.30f, 	-0.10f, 	-0.30f},
 	{-0.30f, 	-0.10f, 	0.30f, 	0.40f, 	0.40f, 	0.30f, 	-0.10f, 	-0.30f},
 	{-0.30f, 	-0.10f, 	0.20f, 	0.30f, 	0.30f, 	0.20f, 	-0.10f, 	-0.30f},
 	{-0.30f, 	-0.30f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	-0.30f, 	-0.30f},
-	{-0.50f, 	-0.30f, 	-0.30f, 	-0.30f, 	-0.30f, 	-0.30f, 	-0.30f, 	-0.50f}
+	{-0.50f, 	-0.30f, 	-0.30f, -0.30f, -0.30f, -0.30f, -0.30f, 	-0.50f}
 }};
 /*
 Mtx8x8 invert_mtx(Mtx8x8 mtx){//mtxs are for white, for black i have to invert it
@@ -251,10 +251,13 @@ int max_npieces = 32;
 float pos_value(int npieces, float mid_game, float end_game){//media pesata
 
 	float start_weight = (float)npieces;
-	float end_wheight = ((float)max_npieces - (float)npieces);
+	float end_weight = ((float)max_npieces - (float)npieces);
+	float tot_weight = (float)max_npieces;//magari faccio in base a record.size
 	
-	return ((mid_game)*start_weight + (end_game)*end_wheight)/(float)max_npieces;
+	return ((mid_game)*start_weight + (end_game)*end_weight)/tot_weight;
 }
+
+float moves_value = 0.05f;
 
 float evaluate_pos(Position& state){
 	
@@ -275,6 +278,7 @@ float evaluate_pos(Position& state){
 	*/
     for(uint8_t piece = PAWN; piece<=KING; piece++){
 		uint64_t board = state.pieces[0][piece];
+		//std::cout<<"npieces: "<<npieces<<" - piece: "<<(int)piece<<std::endl;
         while(board){
             val =piece_value[piece];
 
@@ -286,7 +290,7 @@ float evaluate_pos(Position& state){
 			end_game = pos_mtx[piece][END_GAME][pos.x][pos.y];
 			val_pos = pos_value(npieces, mid_game, end_game);
 			val += val_pos;//position value
-
+			//std::cout<<" pos: "<<pos.x<<" "<<pos.y<<" val: "<<val_pos<<std::endl;
 			ris -= val;
         }
 		board = state.pieces[1][piece];
@@ -299,11 +303,18 @@ float evaluate_pos(Position& state){
 			mid_game = pos_mtx[piece][MID_GAME][pos.x][pos.y];
 			end_game = pos_mtx[piece][END_GAME][pos.x][pos.y];
 			val_pos = pos_value(npieces, mid_game, end_game);
+			//std::cout<<" pos: "<<pos.x<<" "<<pos.y<<" val: "<<val_pos<<std::endl;
 			val += val_pos;//position value
 
 			ris+=val;
         }
 	}
+	//sviluppo: ogni cavallo/alfiere ancora a casa costa 0.15, sfuma verso il finale
+	const uint64_t HOME_W = (1ULL<<1)|(1ULL<<2)|(1ULL<<5)|(1ULL<<6);//b1 c1 f1 g1
+	const uint64_t HOME_B = (1ULL<<57)|(1ULL<<58)|(1ULL<<61)|(1ULL<<62);//b8 c8 f8 g8
+	int home_w = __builtin_popcountll((state.pieces[1][KNIGHT] | state.pieces[1][BISHOP]) & HOME_W);
+	int home_b = __builtin_popcountll((state.pieces[0][KNIGHT] | state.pieces[0][BISHOP]) & HOME_B);
+	ris -= 0.15f * (home_w - home_b) * (float)npieces / (float)max_npieces;//a fine game te ne freghi
 	//std::cout<<ris<<std::endl;
     return ris;
 }

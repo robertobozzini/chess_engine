@@ -6,6 +6,8 @@ menu:
 
 game:
 
+    speed up bot
+
     faccio che bot cerca di evitare pareggio -> dovrebbe bastare la pos
 
     eval_bar: metto numero effettivo in mezzo
