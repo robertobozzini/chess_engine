@@ -17,6 +17,8 @@ bool choosing;
 
 int end_game = NO_ENDG;
 
+bool only_bot = 0;
+
 //BOARD CHANGE OPERATIONS
 
 void clear_board_piece(Position &board, bool color, int sq, int piece){
@@ -292,7 +294,12 @@ void change_turn(const Move &new_move){
 	gen_moves(currentp, current_legality, moves);
 	currentp.end_game = check_endgame(current_legality, moves, record);
 
-	if((currentp.w_to_move == !settings[TURN]) && settings[BOT]){
+	bool bot_turn = (currentp.w_to_move == !settings[TURN]) && settings[BOT];
+	bot_turn = bot_turn || only_bot;
+
+	if(only_bot)sleep(0.4);
+
+	if(bot_turn){
 		bot_asyinc(currentp, current_legality);
 	}
 	else if(settings[EVAL]){

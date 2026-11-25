@@ -5,8 +5,8 @@
 #include "menu_main.h"
 #include "search.h"
 
-constexpr int max_depth = 7; //max search depth (half turns) -> mettere odd cosi piuttosto di blunderare non fa
-const int max_capture_depth = 2*max_depth -1; //max depth of all captures (including the normal depth) odd per stesso motivo
+constexpr int max_depth = 6; //max search depth (half turns) -> mettere even cosi piuttosto di blunderare non fa
+const int max_capture_depth = 2*max_depth; //max depth of all captures (including the normal depth) even per stesso motivo
 
 std::atomic<int>search_gen{0};
 

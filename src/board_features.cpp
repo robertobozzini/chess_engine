@@ -43,9 +43,11 @@ void take_back_move(void){
 		current_legality = legality(currentp);
 	}
 
+	bool bot_turn = (currentp.w_to_move == !settings[TURN]) && settings[BOT];
+	bot_turn = bot_turn || only_bot;
 
-
-	if((currentp.w_to_move == !settings[TURN]) && settings[BOT]){
+	if(only_bot)sleep(0.4);
+	if(bot_turn){
 		bot_asyinc(currentp, current_legality);
 
 	}
@@ -94,10 +96,13 @@ void game_buttons_init(void){
 
 void handle_turn(int sq){
 
-	
-	if((currentp.w_to_move == !settings[TURN]) && settings[BOT])//bots turn
+	bool bot_turn = (currentp.w_to_move == !settings[TURN]) && settings[BOT];
+	bot_turn = bot_turn || only_bot;
+
+	if(only_bot) sleep(0.4);
+	if(bot_turn)//bots turn
 	{
-		if(record.size()==1)
+		if(record.size()==1)//first move
 			bot_asyinc(currentp, current_legality);
 		return;
 	}

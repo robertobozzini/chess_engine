@@ -4,6 +4,7 @@
 #include "main.h"
 #include <cstdint>
 #include <cstring>
+#include <unistd.h>
 
 
 enum Square : int { 
@@ -36,6 +37,7 @@ struct Position {
 	Move lastmove;
 	int end_game; //0 = no end game, 1 = tie, 2 = checkmate
 };
+extern bool only_bot;
 extern bool choosing;
 extern Position startingp;
 extern Position currentp;

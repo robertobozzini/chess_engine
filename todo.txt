@@ -28,6 +28,7 @@ game:
 
     implemento aperture
     
+    faccio giocare bot contro se stesso
 
 
 
