@@ -10,14 +10,15 @@
 
 using namespace std;
 
+bool only_bot = false; //if true the bot plays against itself
+
+
 Vector2 corner;
 int squaresize, chessboardsize;
 
 bool choosing;
 
 int end_game = NO_ENDG;
-
-bool only_bot = 0;
 
 //BOARD CHANGE OPERATIONS
 
@@ -183,6 +184,8 @@ void board_reset(void){
 
 	bot_ready=false;
 
+	firstmove = 1;
+
 }
 
 void board_init(void){
@@ -302,7 +305,7 @@ void change_turn(const Move &new_move){
 	//if(only_bot)sleep(0.4);
 	bot_ready = 0;
 	bot_move = emptymv;
-	std::cout<<"turno bot: "<<bot_turn<<" nel turno di colore "<<currentp.w_to_move<<std::endl;
+	//std::cout<<"turno bot: "<<bot_turn<<" nel turno di colore "<<currentp.w_to_move<<std::endl;
 	if(bot_turn){
 		bot_asyinc(currentp, current_legality);
 	}

@@ -6,6 +6,12 @@ menu:
 
 game:
 
+    fare che svantaggia leggermente doppie piedine
+
+    sistemo controllo di fine gioco per foglie in ricerca
+
+    inserisco vantaggio per piu mosse fattibili (tipo 0.01*nmoss)
+
     speed up bot
 
     faccio che bot cerca di evitare pareggio -> dovrebbe bastare la pos
@@ -28,7 +34,6 @@ game:
 
     implemento aperture
     
-    faccio giocare bot contro se stesso
 
 
 

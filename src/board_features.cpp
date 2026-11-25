@@ -94,6 +94,8 @@ void game_buttons_init(void){
 	
 }
 
+bool firstmove;
+
 void handle_turn(int sq){
 
 	bool bot_turn = (currentp.w_to_move == !settings[TURN]) && settings[BOT];
@@ -102,7 +104,7 @@ void handle_turn(int sq){
 	//if(only_bot) sleep(0.4);
 	if(bot_turn)//bots turn
 	{
-		if(record.size()==1)//first move
+		if(firstmove)//first move
 			bot_asyinc(currentp, current_legality);
 		return;
 	}
@@ -160,7 +162,6 @@ void handle_turn(int sq){
 		held_piece_sq = NO_SQ;
     }
 }
-bool firstmove = 1;
 
 void handle_mouse(void){
     Vector2 mouse_position = GetMousePosition();
@@ -170,29 +171,24 @@ void handle_mouse(void){
 	lobby_button.button_event_handler();
 
 	if(currentp.end_game != NO_ENDG){
-
 		return;
 	}
 
 	if(bot_ready){
-		bot_ready = false;
-		std::cout<<"bot è pronto"<<std::endl;
+		//bot_ready = false;
+		//std::cout<<"bot è pronto"<<std::endl;
 		change_turn(bot_move);
 		//bot_move = emptymv;
 		//if(only_bot)return;
 		
 	}
-	if(only_bot && firstmove){
-		bot_asyinc(currentp, current_legality);
-		firstmove = 0;
+	if(only_bot){
+		if(firstmove){
+			bot_asyinc(currentp, current_legality);
+			firstmove = 0;
+		}
+		return;
 	}
-	// else if(only_bot && record.size()==1){//first move
-	// 	//if(record.size()==1)//first move
-	// 	bot_asyinc(currentp, current_legality);
-	// 	//return;
-	// }
-
-	if(only_bot)return;
 
     if(!on_board(mouse_position)){
 

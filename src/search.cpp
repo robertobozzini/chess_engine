@@ -5,20 +5,12 @@
 #include "menu_main.h"
 #include "search.h"
 
-constexpr int max_depth = 4; //max search depth (half turns) -> mettere even cosi piuttosto di blunderare non fa
+
+constexpr int max_depth = 6; //max search depth (half turns) -> mettere even cosi piuttosto di blunderare non fa
 const int max_capture_depth = 2*max_depth; //max depth of all captures (including the normal depth) even per stesso motivo
 
 std::atomic<int>search_gen{0};
 
-static float move_score(const Move& mv){
-	float s = 0.0f;
-	if(mv.captured != EMPTY) s += 100.0f + 10.0f*piece_value[mv.captured] - piece_value[mv.piece]; // vittima grossa, attaccante piccolo
-	if(mv.promo != EMPTY) s += 80.0f + piece_value[mv.promo];
-	if(mv.flag == CASTLE) s += 50.0f;
-	return s;
-}
-
-float move_pst_gain(const Move& m, bool white);
 
 void sort_moves(std::vector<Move>& moves, bool white, bool order_quiets){
 	//per l'alpha beta: prima i tattici (catture, promozioni, arrocco) ordinati, poi i tranquilli per guadagno posizionale
@@ -28,30 +20,22 @@ void sort_moves(std::vector<Move>& moves, bool white, bool order_quiets){
 
 	auto mid = std::partition(moves.begin(), moves.end(), tactical);
 
-	std::sort(moves.begin(), mid, [](const Move& a, const Move& b){ 
-		return move_score(a) > move_score(b); 
-	});
-	if(order_quiets) 
-		std::sort(mid, moves.end(), [white](const Move& a, const Move& b){ 
-		return move_pst_gain(a, white) > move_pst_gain(b, white); });
-	
-}
-
-void sort_moves(std::vector<Move>& moves){
-	//for alpha beta pruning
-	auto score = [](const Move& mv){
+	auto move_score = [](const Move& mv){
 		float s = 0.0f;
+
 		if(mv.captured != EMPTY) s += 100.0f + 10.0f*piece_value[mv.captured] - piece_value[mv.piece]; // vittima grossa, attaccante piccolo
 		if(mv.promo != EMPTY) s += 80.0f + piece_value[mv.promo];
 		if(mv.flag == CASTLE) s += 50.0f;
 		return s;
 	};
 
-	std::sort(moves.begin(), moves.end(), //not stable_sort: gives a bit of a random twist
-		[&](const Move& a, const Move& b){ 
-			return score(a) > score(b); 
+	std::sort(moves.begin(), mid, [&](const Move& a, const Move& b){ 
+		return move_score(a) > move_score(b); 
 	});
-	return;
+	if(order_quiets) //miglioramento in posizione
+		std::sort(mid, moves.end(), [white](const Move& a, const Move& b){ 
+		return move_pst_gain(a, white) > move_pst_gain(b, white); });
+	
 }
 
 
@@ -94,7 +78,7 @@ float try_moves(int depth, Position state, const Move &mv, std::vector<Position>
 
 	//float (*best)(float a, float b);
 	//best = (state.w_to_move)?std::fmaxf:std::fminf;
-	sort_moves(moves);
+	sort_moves(moves, state.w_to_move, true);
 	bool checked = 0;
 
 	if(depth > max_depth){ //quiescenza (rinuncio a catture)
@@ -162,16 +146,15 @@ Move bot_move;
 
 void do_best_move(const Position& state,const Legality& leg, std::vector<Position>&hist, int id){
 	
-	Move ris = emptymv;
 	//std::cout<<state.w_to_move<<std::endl;
 
-	bool (*better)(float, float) = (!settings[TURN]) 
-		? +[](float a, float b) { return a > b; }//maximize for white
-		: +[](float a, float b) { return a < b; };//minimize for black
+	bool (*better)(float, float) = (state.w_to_move) 
+		? +[](float a, float b) { return a >= b; }//maximize for white
+		: +[](float a, float b) { return a <= b; };//minimize for black
 
 	std::vector<Move>bot_moves;
 	gen_moves(state, leg, bot_moves);
-	sort_moves(bot_moves);
+	sort_moves(bot_moves, state.w_to_move, true);
 
 	float best;
 	best = (state.w_to_move)? -INF:INF;
@@ -180,6 +163,8 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 	float beta = INF;
 	float* pivot = (state.w_to_move)? &alpha:&beta;//what to update //= !settings[TURN]
 
+	std::vector<Move*>eq_moves;//less memory allocation with pointer (not by much, ~4 bytes)
+	//to make some random moves
 	for(Move& move: bot_moves){
 		if(id != search_gen)
 			return;
@@ -187,8 +172,12 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 		float val_move = try_moves(1, state, move, hist, alpha, beta, id);//i use search gen to stop it all toghether and not divide search gen - bot gen
 
 		if(better(val_move, best)){
+			if(val_move != best)
+				eq_moves.clear();
+
 			best = val_move;
-			ris = move;
+			//ris = move;
+			eq_moves.push_back(&move);
 		}
 		if(better(best, *pivot)){
 			*pivot = best;
@@ -198,8 +187,9 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 	}
 
 	if(id == search_gen){
-		std::cout<<"ris from this move: "<<best<<" turn: "<<state.w_to_move<<std::endl;
-		bot_move = ris;
+
+		//std::cout<<"ris from this move: "<<best<<" turn: "<<state.w_to_move<<std::endl;
+		bot_move = (eq_moves.empty())? emptymv: *eq_moves[rand()%eq_moves.size()];//why is it making bad moves?
 		bot_ready = true;
 
 		if(settings[EVAL]) 
@@ -212,7 +202,7 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 
 void bot_asyinc(const Position& state, const Legality &leg){
 	int id = ++search_gen;
-	std::cout<<"start of search: "<<id<<std::endl;
+	//std::cout<<"start of search: "<<id<<std::endl;
 	std::thread([state, leg, id, hist = record]() mutable{
 		bot_ready = false;
 		bot_move = emptymv;

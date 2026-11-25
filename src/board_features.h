@@ -20,6 +20,7 @@ extern Button restart_button;
 extern Button lobby_button;
 void game_buttons_init(void);
 
+extern bool firstmove;
 void handle_mouse(void);
 bool handle_features(void);
 void draw_features(void);
