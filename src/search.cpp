@@ -5,7 +5,7 @@
 #include "menu_main.h"
 #include "search.h"
 
-constexpr int max_depth = 6; //max search depth (half turns)
+constexpr int max_depth = 4; //max search depth (half turns)
 const int max_capture_depth = 2*max_depth; //max depth of all captures (including the normal depth)
 
 std::atomic<int>search_gen{0};
@@ -154,7 +154,7 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 	}
 
 	if(id == search_gen){
-		//std::cout<<"ris from this move: "<<best<<std::endl;
+		std::cout<<"ris from this move: "<<best<<std::endl;
 		bot_move = ris;
 		bot_ready = true;
 

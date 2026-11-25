@@ -116,14 +116,14 @@ Mtx8x8 pawn_mtx_eg={{
 }};
 
 Mtx8x8 knight={{
-	{-0.50f, 	-0.40f, 	-0.30f, 	-0.30f, 	-0.30f, 	-0.30f, 	-0.40f, 	-0.50f},
-	{-0.40f, 	-0.20f, 	0.00f, 	0.00f, 	0.00f, 	0.00f, 	-0.20f, 	-0.40f},
+	{-0.50f, 	-0.40f, -0.30f, -0.30f, -0.30f, -0.30f, -0.40f, -0.50f},
+	{-0.40f, 	-0.20f, 0.00f, 	0.00f, 	0.00f, 	0.00f, -0.20f, -0.40f},
 	{-0.30f, 	0.00f, 	0.10f, 	0.15f, 	0.15f, 	0.10f, 	0.00f, 	-0.30f},
 	{-0.30f, 	0.05f, 	0.15f, 	0.20f, 	0.20f, 	0.15f, 	0.05f, 	-0.30f},
 	{-0.30f, 	0.00f, 	0.15f, 	0.20f, 	0.20f, 	0.15f, 	0.00f, 	-0.30f},
 	{-0.30f, 	0.05f, 	0.10f, 	0.15f, 	0.15f, 	0.10f, 	0.05f, 	-0.30f},
-	{-0.40f, 	-0.20f, 	0.00f, 	0.05f, 	0.05f, 	0.00f, 	-0.20f, 	-0.40f},
-	{-0.50f, 	-0.40f, 	-0.30f, 	-0.30f, 	-0.30f, 	-0.30f, 	-0.40f, 	-0.50f}
+	{-0.40f, 	-0.20f, 0.00f, 	0.05f, 	0.05f, 	0.00f, 	-0.20f, -0.40f},
+	{-0.50f, 	-0.40f, -0.30f, -0.30f, -0.30f, -0.30f, -0.40f, -0.50f}
 }};
 
 Mtx8x8 bishop={{
@@ -225,18 +225,23 @@ void mtx_init(void){
 			case PAWN:
 				*mtx_mg = pawn_mtx_mg;
 				*mtx_eg = pawn_mtx_eg;
+				break;
 			case KNIGHT:
 				*mtx_mg = knight;
 				*mtx_eg = knight;
+				break;
 			case BISHOP:
 				*mtx_mg = bishop;
 				*mtx_eg = bishop;
+				break;
 			case ROOK:
 				*mtx_mg = rook_mg;
 				*mtx_eg = rook_eg;
+				break;
 			case QUEEN:
 				*mtx_mg = queen_mg;
 				*mtx_eg = queen_eg;
+				break;
 			case KING:
 				*mtx_mg = king_mg;
 				*mtx_eg = king_eg;
@@ -285,9 +290,10 @@ float evaluate_pos(Position& state){
             sq = pop_lsb(board);
 			Vector2 pos=sq_to_coord(sq);
 			pos = invert_coord(pos);
+			
 
-			mid_game = pos_mtx[piece][MID_GAME][pos.x][pos.y];
-			end_game = pos_mtx[piece][END_GAME][pos.x][pos.y];
+			mid_game = pos_mtx[piece][MID_GAME][pos.y][pos.x];
+			end_game = pos_mtx[piece][END_GAME][pos.y][pos.x];
 			val_pos = pos_value(npieces, mid_game, end_game);
 			val += val_pos;//position value
 			//std::cout<<" pos: "<<pos.x<<" "<<pos.y<<" val: "<<val_pos<<std::endl;
@@ -299,9 +305,9 @@ float evaluate_pos(Position& state){
 
             sq = pop_lsb(board);
 			Vector2 pos=sq_to_coord(sq);
-
-			mid_game = pos_mtx[piece][MID_GAME][pos.x][pos.y];
-			end_game = pos_mtx[piece][END_GAME][pos.x][pos.y];
+			
+			mid_game = pos_mtx[piece][MID_GAME][pos.y][pos.x];
+			end_game = pos_mtx[piece][END_GAME][pos.y][pos.x];
 			val_pos = pos_value(npieces, mid_game, end_game);
 			//std::cout<<" pos: "<<pos.x<<" "<<pos.y<<" val: "<<val_pos<<std::endl;
 			val += val_pos;//position value
@@ -314,7 +320,7 @@ float evaluate_pos(Position& state){
 	const uint64_t HOME_B = (1ULL<<57)|(1ULL<<58)|(1ULL<<61)|(1ULL<<62);//b8 c8 f8 g8
 	int home_w = __builtin_popcountll((state.pieces[1][KNIGHT] | state.pieces[1][BISHOP]) & HOME_W);
 	int home_b = __builtin_popcountll((state.pieces[0][KNIGHT] | state.pieces[0][BISHOP]) & HOME_B);
-	ris -= 0.15f * (home_w - home_b) * (float)npieces / (float)max_npieces;//a fine game te ne freghi
+	ris -= 0.10f * (home_w - home_b) * (float)npieces / (float)max_npieces;//a fine game te ne freghi
 	//std::cout<<ris<<std::endl;
     return ris;
 }
