@@ -181,6 +181,8 @@ void board_reset(void){
 	target_eval_val = 0.0f;
 	eval_val = 0.0f;
 
+	bot_ready=false;
+
 }
 
 void board_init(void){
@@ -297,8 +299,10 @@ void change_turn(const Move &new_move){
 	bool bot_turn = (currentp.w_to_move == !settings[TURN]) && settings[BOT];
 	bot_turn = bot_turn || only_bot;
 
-	if(only_bot)sleep(0.4);
-
+	//if(only_bot)sleep(0.4);
+	bot_ready = 0;
+	bot_move = emptymv;
+	std::cout<<"turno bot: "<<bot_turn<<" nel turno di colore "<<currentp.w_to_move<<std::endl;
 	if(bot_turn){
 		bot_asyinc(currentp, current_legality);
 	}

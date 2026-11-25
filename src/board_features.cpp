@@ -46,7 +46,7 @@ void take_back_move(void){
 	bool bot_turn = (currentp.w_to_move == !settings[TURN]) && settings[BOT];
 	bot_turn = bot_turn || only_bot;
 
-	if(only_bot)sleep(0.4);
+	//if(only_bot)sleep(0.4);
 	if(bot_turn){
 		bot_asyinc(currentp, current_legality);
 
@@ -99,7 +99,7 @@ void handle_turn(int sq){
 	bool bot_turn = (currentp.w_to_move == !settings[TURN]) && settings[BOT];
 	bot_turn = bot_turn || only_bot;
 
-	if(only_bot) sleep(0.4);
+	//if(only_bot) sleep(0.4);
 	if(bot_turn)//bots turn
 	{
 		if(record.size()==1)//first move
@@ -160,6 +160,7 @@ void handle_turn(int sq){
 		held_piece_sq = NO_SQ;
     }
 }
+bool firstmove = 1;
 
 void handle_mouse(void){
     Vector2 mouse_position = GetMousePosition();
@@ -174,9 +175,24 @@ void handle_mouse(void){
 	}
 
 	if(bot_ready){
-		change_turn(bot_move);
 		bot_ready = false;
+		std::cout<<"bot è pronto"<<std::endl;
+		change_turn(bot_move);
+		//bot_move = emptymv;
+		//if(only_bot)return;
+		
 	}
+	if(only_bot && firstmove){
+		bot_asyinc(currentp, current_legality);
+		firstmove = 0;
+	}
+	// else if(only_bot && record.size()==1){//first move
+	// 	//if(record.size()==1)//first move
+	// 	bot_asyinc(currentp, current_legality);
+	// 	//return;
+	// }
+
+	if(only_bot)return;
 
     if(!on_board(mouse_position)){
 

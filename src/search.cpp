@@ -5,7 +5,7 @@
 #include "menu_main.h"
 #include "search.h"
 
-constexpr int max_depth = 6; //max search depth (half turns) -> mettere even cosi piuttosto di blunderare non fa
+constexpr int max_depth = 4; //max search depth (half turns) -> mettere even cosi piuttosto di blunderare non fa
 const int max_capture_depth = 2*max_depth; //max depth of all captures (including the normal depth) even per stesso motivo
 
 std::atomic<int>search_gen{0};
@@ -156,7 +156,7 @@ void eval_asyinc(Position& state){
 	}).detach();
 }
 
-std::atomic<bool> bot_ready{false};
+std::atomic<bool> bot_ready;
 std::atomic<int> bot_gen;
 Move bot_move;
 
@@ -198,7 +198,7 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 	}
 
 	if(id == search_gen){
-		std::cout<<"ris from this move: "<<best<<std::endl;
+		std::cout<<"ris from this move: "<<best<<" turn: "<<state.w_to_move<<std::endl;
 		bot_move = ris;
 		bot_ready = true;
 
@@ -212,6 +212,7 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 
 void bot_asyinc(const Position& state, const Legality &leg){
 	int id = ++search_gen;
+	std::cout<<"start of search: "<<id<<std::endl;
 	std::thread([state, leg, id, hist = record]() mutable{
 		bot_ready = false;
 		bot_move = emptymv;
