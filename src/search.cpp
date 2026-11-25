@@ -5,12 +5,37 @@
 #include "menu_main.h"
 #include "search.h"
 
-constexpr int max_depth = 4; //max search depth (half turns)
-const int max_capture_depth = 2*max_depth; //max depth of all captures (including the normal depth)
+constexpr int max_depth = 7; //max search depth (half turns) -> mettere odd cosi piuttosto di blunderare non fa
+const int max_capture_depth = 2*max_depth -1; //max depth of all captures (including the normal depth) odd per stesso motivo
 
 std::atomic<int>search_gen{0};
 
+static float move_score(const Move& mv){
+	float s = 0.0f;
+	if(mv.captured != EMPTY) s += 100.0f + 10.0f*piece_value[mv.captured] - piece_value[mv.piece]; // vittima grossa, attaccante piccolo
+	if(mv.promo != EMPTY) s += 80.0f + piece_value[mv.promo];
+	if(mv.flag == CASTLE) s += 50.0f;
+	return s;
+}
 
+float move_pst_gain(const Move& m, bool white);
+
+void sort_moves(std::vector<Move>& moves, bool white, bool order_quiets){
+	//per l'alpha beta: prima i tattici (catture, promozioni, arrocco) ordinati, poi i tranquilli per guadagno posizionale
+	auto tactical = [](const Move& m){ 
+		return m.captured != EMPTY || m.promo != EMPTY || m.flag == CASTLE; 
+	};
+
+	auto mid = std::partition(moves.begin(), moves.end(), tactical);
+
+	std::sort(moves.begin(), mid, [](const Move& a, const Move& b){ 
+		return move_score(a) > move_score(b); 
+	});
+	if(order_quiets) 
+		std::sort(mid, moves.end(), [white](const Move& a, const Move& b){ 
+		return move_pst_gain(a, white) > move_pst_gain(b, white); });
+	
+}
 
 void sort_moves(std::vector<Move>& moves){
 	//for alpha beta pruning
@@ -46,7 +71,11 @@ float try_moves(int depth, Position state, const Move &mv, std::vector<Position>
 	}
 
 	Legality hypot_legality = legality(state);//hypotethical
-	std::vector<Move>moves;
+
+	static thread_local std::vector<Move> pool[64];//un vettore per profondita': evita malloc/realloc a ogni nodo
+	std::vector<Move>& moves = pool[depth];
+
+	moves.clear();
 	gen_moves(state, hypot_legality, moves);
 
 	hist.push_back(state);//if all is ok i push back for checking stuff
@@ -67,6 +96,21 @@ float try_moves(int depth, Position state, const Move &mv, std::vector<Position>
 	//best = (state.w_to_move)?std::fmaxf:std::fminf;
 	sort_moves(moves);
 	bool checked = 0;
+
+	if(depth > max_depth){ //quiescenza (rinuncio a catture)
+		ris = evaluate_pos(state);
+
+		if(state.w_to_move) 
+			alpha = std::max(alpha, ris); 
+		else 
+			beta = std::min(beta, ris);
+
+		if(alpha >= beta){ 
+			hist.pop_back(); 
+			return ris; 
+		}
+	}
+
 	for(Move& move: moves){
 		if(id != search_gen)
 			break;//stop searching

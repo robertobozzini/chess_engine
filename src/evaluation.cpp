@@ -69,8 +69,10 @@ int check_endgame(const Legality& L, const std::vector<Move>& moves, const std::
 	}
 
 	int contam = 1;
+	int cur_n = __builtin_popcountll(hist[hist.size()-1].all);
 
 	for(int i =0;i<hist.size()-1; i++){
+		if(__builtin_popcountll(hist[i].all) != cur_n) break;
 		if(same_pos(hist[i], hist[hist.size()-1])){
 			contam++;
 			if(contam>=3)
@@ -215,6 +217,19 @@ Mtx8x8 invert_mtx(Mtx8x8 mtx){//mtxs are for white, for black i have to invert i
 	*/
 std::array<std::array<Mtx8x8,2>,6>pos_mtx;//da gestire anche conversione mid game - end game
 
+static float fast_mg[2][6][64], fast_eg[2][6][64];//[colore][pezzo][casa]: valore pezzo + tabella, gia' col segno (bianco +, nero -)
+static void fast_init(void){
+	const float POS_W = 1.0f;//peso della posizione (prova 0.8)
+	for(int c=0;c<2;c++) for(int p=PAWN;p<=KING;p++) for(int sq=0;sq<64;sq++){
+		Vector2 pos = sq_to_coord(sq);
+		if(c==0) pos.y = 7 - pos.y;//nero: specchio verticale
+		float base = (p==KING) ? 0.0f : piece_value[p];//i due re si annullano: meglio non sommare 1500 in float
+		float sign = c ? 1.0f : -1.0f;
+		fast_mg[c][p][sq] = sign*(base + POS_W*pos_mtx[p][MID_GAME][(int)pos.y][(int)pos.x]);
+		fast_eg[c][p][sq] = sign*(base + POS_W*pos_mtx[p][END_GAME][(int)pos.y][(int)pos.x]);
+	}
+}
+
 void mtx_init(void){
 	for(uint8_t piece = PAWN; piece<=KING; piece++){
 
@@ -249,80 +264,51 @@ void mtx_init(void){
 		// pos_mtx[0][piece][MID_GAME] = invert_mtx(pos_mtx[1][piece][MID_GAME]);
 		// pos_mtx[0][piece][END_GAME] = invert_mtx(pos_mtx[1][piece][END_GAME]);
 	}
+	fast_init();
 }
 
 int max_npieces = 32;
 
-float pos_value(int npieces, float mid_game, float end_game){//media pesata
+// float pos_value(int npieces, float mid_game, float end_game){//media pesata
 
-	float start_weight = (float)npieces;
-	float end_weight = ((float)max_npieces - (float)npieces);
-	float tot_weight = (float)max_npieces;//magari faccio in base a record.size
+// 	float start_weight = (float)npieces;
+// 	float end_weight = ((float)max_npieces - (float)npieces);
+// 	float tot_weight = (float)max_npieces;//magari faccio in base a record.size
 	
-	return ((mid_game)*start_weight + (end_game)*end_weight)/tot_weight;
-}
+// 	return ((mid_game)*start_weight + (end_game)*end_weight)/tot_weight;
+// }
 
 float moves_value = 0.05f;
 
 float evaluate_pos(Position& state){
-	
-    float ris = 0.0f;
-	int sq;//per ora è solo valori: poi anche valori in base alla posizione
-	//MAPPE DI CONVENIENZA -> devo capire come farle (? da file forse)
-	float val;
-	float val_pos;
-	//conversion mid game -> end game idea:
-	float mid_game, end_game;
-	int npieces = __builtin_popcountll(state.all);
-	/*
-	int val_onb = __builtin_popcountll(state.pieces[0][PAWN] | state.pieces[1][PAWN]) //value on board 
-		+ 3*__builtin_popcountll(state.pieces[0][KNIGHT] | state.pieces[1][KNIGHT])
-		+ 3*__builtin_popcountll(state.pieces[0][BISHOP ] | state.pieces[1][BISHOP])
-		+ 5*(__builtin_popcountll(state.pieces[0][ROOK] | state.pieces[1][ROOK]))
-		+ 9*(__builtin_popcountll(state.pieces[0][QUEEN] | state.pieces[1][QUEEN]))
-	*/
-    for(uint8_t piece = PAWN; piece<=KING; piece++){
-		uint64_t board = state.pieces[0][piece];
-		//std::cout<<"npieces: "<<npieces<<" - piece: "<<(int)piece<<std::endl;
-        while(board){
-            val =piece_value[piece];
-
-            sq = pop_lsb(board);
-			Vector2 pos=sq_to_coord(sq);
-			pos = invert_coord(pos);
-			
-
-			mid_game = pos_mtx[piece][MID_GAME][pos.y][pos.x];
-			end_game = pos_mtx[piece][END_GAME][pos.y][pos.x];
-			val_pos = pos_value(npieces, mid_game, end_game);
-			val += val_pos;//position value
-			//std::cout<<" pos: "<<pos.x<<" "<<pos.y<<" val: "<<val_pos<<std::endl;
-			ris -= val;
-        }
-		board = state.pieces[1][piece];
-        while(board){
-            val=piece_value[piece];
-
-            sq = pop_lsb(board);
-			Vector2 pos=sq_to_coord(sq);
-			
-			mid_game = pos_mtx[piece][MID_GAME][pos.y][pos.x];
-			end_game = pos_mtx[piece][END_GAME][pos.y][pos.x];
-			val_pos = pos_value(npieces, mid_game, end_game);
-			//std::cout<<" pos: "<<pos.x<<" "<<pos.y<<" val: "<<val_pos<<std::endl;
-			val += val_pos;//position value
-
-			ris+=val;
-        }
+	float mg = 0.0f, eg = 0.0f;
+	for(int c=0;c<2;c++){
+		for(int piece=PAWN; piece<=KING; piece++){
+			uint64_t board = state.pieces[c][piece];
+			while(board){
+				int sq = pop_lsb(board);
+				mg += fast_mg[c][piece][sq];
+				eg += fast_eg[c][piece][sq];
+			}
+		}
 	}
-	//sviluppo: ogni cavallo/alfiere ancora a casa costa 0.15, sfuma verso il finale
+	int npieces = __builtin_popcountll(state.all);
+	float ris = (mg*(float)npieces + eg*(float)(max_npieces - npieces)) / (float)max_npieces;//media pesata una volta sola
+
+	//sviluppo: ogni cavallo/alfiere ancora a casa costa 0.10, sfuma verso il finale
 	const uint64_t HOME_W = (1ULL<<1)|(1ULL<<2)|(1ULL<<5)|(1ULL<<6);//b1 c1 f1 g1
 	const uint64_t HOME_B = (1ULL<<57)|(1ULL<<58)|(1ULL<<61)|(1ULL<<62);//b8 c8 f8 g8
 	int home_w = __builtin_popcountll((state.pieces[1][KNIGHT] | state.pieces[1][BISHOP]) & HOME_W);
 	int home_b = __builtin_popcountll((state.pieces[0][KNIGHT] | state.pieces[0][BISHOP]) & HOME_B);
-	ris -= 0.10f * (home_w - home_b) * (float)npieces / (float)max_npieces;//a fine game te ne freghi
-	//std::cout<<ris<<std::endl;
-    return ris;
+	ris -= 0.10f * (home_w - home_b) * (float)npieces / (float)max_npieces;
+
+	return ris;
+}
+
+float move_pst_gain(const Move& m, bool white){//quanto la mossa migliora la tabella posizionale (mid game), per chi muove
+	int c = white ? 1 : 0;
+	float d = fast_mg[c][m.piece][m.to] - fast_mg[c][m.piece][m.from];
+	return white ? d : -d;
 }
 
 

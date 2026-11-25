@@ -24,7 +24,7 @@ void gen_moves(const Position& state, const Legality& L, std::vector<Move>& move
 int check_endgame(const Legality& L, const std::vector<Move>& moves, const std::vector<Position>& hist);
 
 float evaluate_pos(Position& state);
-
+float move_pst_gain(const Move& m, bool white);
 
 void eval_bar_draw();
 #endif
