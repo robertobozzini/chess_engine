@@ -6,13 +6,24 @@ menu:
 
 game:
 
+    sistemo blunders
+
+    speed up bot : bot vs bot is fairly fast, player vs bot looks much slower, but isnt in calculating
+
+
+    ricontrollo architettura / testo per bug
+
+    faccio in modo che exe funzioni sia da dentro src sia da fuori (?se si puo, per vers. finale sempre da fuori)
+
     fare che svantaggia leggermente doppie piedine
+
+    fare che punteggio è relativo: diff. di punteggio a inizio game vale meno di a fine game
+
+    fare che piu verso endgame avvantaggia re ad andare verso re nemico se sta vincendo
 
     sistemo controllo di fine gioco per foglie in ricerca
 
     inserisco vantaggio per piu mosse fattibili (tipo 0.01*nmoss)
-
-    speed up bot
 
     faccio che bot cerca di evitare pareggio -> dovrebbe bastare la pos
 

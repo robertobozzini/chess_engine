@@ -10,7 +10,7 @@
 
 using namespace std;
 
-bool only_bot = false; //if true the bot plays against itself
+bool only_bot = 0; //if true the bot plays against itself
 
 
 Vector2 corner;
@@ -305,6 +305,8 @@ void change_turn(const Move &new_move){
 	//if(only_bot)sleep(0.4);
 	bot_ready = 0;
 	bot_move = emptymv;
+
+	firstmove = 0;
 	//std::cout<<"turno bot: "<<bot_turn<<" nel turno di colore "<<currentp.w_to_move<<std::endl;
 	if(bot_turn){
 		bot_asyinc(currentp, current_legality);

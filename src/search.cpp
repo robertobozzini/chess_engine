@@ -4,7 +4,7 @@
 #include "board_features.h"
 #include "menu_main.h"
 #include "search.h"
-
+#include <chrono>
 
 constexpr int max_depth = 6; //max search depth (half turns) -> mettere even cosi piuttosto di blunderare non fa
 const int max_capture_depth = 2*max_depth; //max depth of all captures (including the normal depth) even per stesso motivo
@@ -145,8 +145,9 @@ std::atomic<int> bot_gen;
 Move bot_move;
 
 void do_best_move(const Position& state,const Legality& leg, std::vector<Position>&hist, int id){
+	auto t0 = std::chrono::steady_clock::now();
 	
-	//std::cout<<state.w_to_move<<std::endl;
+	//std::cout<<"start move"<<std::endl;
 
 	bool (*better)(float, float) = (state.w_to_move) 
 		? +[](float a, float b) { return a >= b; }//maximize for white
@@ -165,6 +166,8 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 
 	std::vector<Move*>eq_moves;//less memory allocation with pointer (not by much, ~4 bytes)
 	//to make some random moves
+
+	//float eps = 0.0001f;	
 	for(Move& move: bot_moves){
 		if(id != search_gen)
 			return;
@@ -194,6 +197,9 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 
 		if(settings[EVAL]) 
 			target_eval_val = best;
+		
+		//double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+		//std::cout << "bot " << ms << " ms, pezzi=" << __builtin_popcountll(state.all) << " only_bot=" << only_bot << std::endl;
 	}
 
 	

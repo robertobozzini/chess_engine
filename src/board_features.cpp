@@ -106,6 +106,7 @@ void handle_turn(int sq){
 	{
 		if(firstmove)//first move
 			bot_asyinc(currentp, current_legality);
+		firstmove = 0;
 		return;
 	}
 
