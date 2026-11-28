@@ -10,7 +10,7 @@
 
 using namespace std;
 
-bool only_bot = 0; //if true the bot plays against itself
+bool only_bot = 1; //if true the bot plays against itself
 
 
 Vector2 corner;

@@ -72,7 +72,9 @@ int check_endgame(const Legality& L, const std::vector<Move>& moves, const std::
 	int cur_n = __builtin_popcountll(hist[hist.size()-1].all);
 
 	for(int i =0;i<hist.size()-1; i++){
-		if(__builtin_popcountll(hist[i].all) != cur_n) break;
+		if(__builtin_popcountll(hist[i].all) != cur_n) 
+			continue;
+		
 		if(same_pos(hist[i], hist[hist.size()-1])){
 			contam++;
 			if(contam>=3)

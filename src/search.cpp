@@ -145,13 +145,9 @@ std::atomic<int> bot_gen;
 Move bot_move;
 
 void do_best_move(const Position& state,const Legality& leg, std::vector<Position>&hist, int id){
-	auto t0 = std::chrono::steady_clock::now();
+	//auto t0 = std::chrono::steady_clock::now();
 	
 	//std::cout<<"start move"<<std::endl;
-
-	bool (*better)(float, float) = (state.w_to_move) 
-		? +[](float a, float b) { return a >= b; }//maximize for white
-		: +[](float a, float b) { return a <= b; };//minimize for black
 
 	std::vector<Move>bot_moves;
 	gen_moves(state, leg, bot_moves);
@@ -164,35 +160,34 @@ void do_best_move(const Position& state,const Legality& leg, std::vector<Positio
 	float beta = INF;
 	float* pivot = (state.w_to_move)? &alpha:&beta;//what to update //= !settings[TURN]
 
-	std::vector<Move*>eq_moves;//less memory allocation with pointer (not by much, ~4 bytes)
+	std::vector<Move>eq_moves;
 	//to make some random moves
 
-	//float eps = 0.0001f;	
+	const float eps = 0.01f;
 	for(Move& move: bot_moves){
 		if(id != search_gen)
 			return;
-		
-		float val_move = try_moves(1, state, move, hist, alpha, beta, id);//i use search gen to stop it all toghether and not divide search gen - bot gen
 
-		if(better(val_move, best)){
-			if(val_move != best)
-				eq_moves.clear();
+		float val_move = try_moves(1, state, move, hist, alpha, beta, id);
 
+		if(state.w_to_move ? val_move > best + eps : val_move < best - eps){
+			eq_moves.clear();
 			best = val_move;
-			//ris = move;
-			eq_moves.push_back(&move);
+			eq_moves.push_back(move);
 		}
-		if(better(best, *pivot)){
-			*pivot = best;
-		}
-		//ris = best(ris, val_move);
-		if(alpha>=beta)break;
+		else if(fabsf(val_move - best) <= eps)
+			eq_moves.push_back(move);
+
+		if(state.w_to_move) 
+			alpha = std::max(alpha, best - eps);
+		else 
+			beta = std::min(beta, best + eps);
 	}
 
 	if(id == search_gen){
 
 		//std::cout<<"ris from this move: "<<best<<" turn: "<<state.w_to_move<<std::endl;
-		bot_move = (eq_moves.empty())? emptymv: *eq_moves[rand()%eq_moves.size()];//why is it making bad moves?
+		bot_move = (eq_moves.empty())? emptymv: eq_moves[rand()%((int)eq_moves.size())];//why is it making bad moves?
 		bot_ready = true;
 
 		if(settings[EVAL]) 

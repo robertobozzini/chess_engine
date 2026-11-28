@@ -6,11 +6,6 @@ menu:
 
 game:
 
-    sistemo blunders
-
-    speed up bot : bot vs bot is fairly fast, player vs bot looks much slower, but isnt in calculating
-
-
     ricontrollo architettura / testo per bug
 
     faccio in modo che exe funzioni sia da dentro src sia da fuori (?se si puo, per vers. finale sempre da fuori)
@@ -21,11 +16,7 @@ game:
 
     fare che piu verso endgame avvantaggia re ad andare verso re nemico se sta vincendo
 
-    sistemo controllo di fine gioco per foglie in ricerca
-
     inserisco vantaggio per piu mosse fattibili (tipo 0.01*nmoss)
-
-    faccio che bot cerca di evitare pareggio -> dovrebbe bastare la pos
 
     eval_bar: metto numero effettivo in mezzo
 
@@ -36,10 +27,6 @@ game:
     ricontrollo: polish e end_game e gestione record per bot
 
     metto suoni
-
-    creo e implemento mappe di convenienza per i pezzi:
-        calibro le matrici
-        check di game stage
 
     faccio script per provare posizioni (e script per creare posizioni(?) sia random sia non)
 
